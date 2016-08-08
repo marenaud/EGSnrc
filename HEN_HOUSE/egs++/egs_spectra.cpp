@@ -1061,10 +1061,10 @@ protected:
                         // it took for this transition to occur
                         // time += halflife / ln(2) * log(u)
                         double hl = currentLevel->getHalfLife();
-                        if(hl > 0.) {
+                        if (hl > 0.) {
                             currentTime += currentLevel->getHalfLife() /
-                                        0.693147180559945309417232121458176568075500134360255254120680009493393
-                                        * log(rndm->getUniform());
+                                           0.693147180559945309417232121458176568075500134360255254120680009493393
+                                           * log(rndm->getUniform());
                         }
 
                         currentLevel = (*gamma)->getFinalLevel();

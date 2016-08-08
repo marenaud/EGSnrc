@@ -269,7 +269,7 @@ public:
     unsigned short int getAtomicWeight() const;
     unsigned short int getForbidden() const;
     void setSpectrum(EGS_AliasTable *bspec);
-    EGS_AliasTable* getSpectrum() const;
+    EGS_AliasTable *getSpectrum() const;
 
 protected:
     EGS_I64 numSampled;
@@ -373,11 +373,11 @@ private:
 
   \ingroup egspp_main
 
-  Reads in a decay spectrum file in ensdf format, and builds the decays into an 
-  object oriented tree structure. This decay structure is useful for 
+  Reads in a decay spectrum file in ensdf format, and builds the decays into an
+  object oriented tree structure. This decay structure is useful for
   \ref EGS_RadionuclideSpectrum.
-  
-  Uncertainties on values are ignored! The energies and intensities for various 
+
+  Uncertainties on values are ignored! The energies and intensities for various
   emissions are taken as is.
 
 */
@@ -403,7 +403,7 @@ public:
     vector<double > getXRayEnergies() const;
     vector<double > getAugerIntensities() const;
     vector<double > getAugerEnergies() const;
-    
+
     string radionuclide;
 
     void normalizeIntensities();
@@ -440,7 +440,7 @@ private:
            xrayIntensities,
            augerEnergies,
            augerIntensities;
-    ParentRecord* previousParent;
+    ParentRecord *previousParent;
 };
 
 
