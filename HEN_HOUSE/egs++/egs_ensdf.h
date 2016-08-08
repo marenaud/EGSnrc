@@ -109,51 +109,52 @@ protected:
 template <class T> class Leaf {
 public:
 
-    Leaf(T *existingTree) {
-        tree = existingTree;
-        if (tree) {
-            tree->addLeaf(this);
+    Leaf(T *existingBranch) {
+        branch = existingBranch;
+        if (branch) {
+            branch->addLeaf(this);
         }
     }
 
     ~Leaf() {
-        if (tree) {
-            tree->removeLeaf(this);
+        if (branch) {
+            branch->removeLeaf(this);
         }
-        tree = 0;
+        branch = 0;
     }
 
     virtual T *getBranch() const {
-        return tree;
+        return branch;
     }
 
     void removeBranch() {
-        tree = 0;
+        branch = 0;
     }
 
     // A new == operator for this class
     bool operator== (const T &rhs) const {
-        if (tree==0 && rhs.tree==0) {
+        if (branch==0 && rhs.branch==0) {
             return true;
         }
-        else if ((tree==0) && rhs.tree!=0) {
+        else if ((branch==0) && rhs.branch!=0) {
             return false;
         }
-        else if ((tree!=0) && rhs.tree==0) {
+        else if ((branch!=0) && rhs.branch==0) {
             return false;
         }
-        else if (tree!=0 && rhs.tree!=0) {
-            return *tree == *(rhs.tree);
+        else if (branch!=0 && rhs.branch!=0) {
+            return *branch == *(rhs.branch);
         }
     }
 
 private:
-    T *tree;
+    T *branch;
 };
 
 // The Record class
 class Record {
 public:
+    Record();
     Record(vector<string> ensdf);
     virtual ~Record();
     vector<string> getRecords() const;
@@ -230,6 +231,7 @@ public:
 // Level Record
 class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
+    LevelRecord();
     LevelRecord(vector<string> ensdf);
     double getEnergy() const;
     double getHalfLife() const;
@@ -438,6 +440,7 @@ private:
            xrayIntensities,
            augerEnergies,
            augerIntensities;
+    ParentRecord* previousParent;
 };
 
 

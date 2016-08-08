@@ -292,14 +292,14 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
     // Search through the gamma records for any with unknown levels
     for (vector<GammaRecord * >::iterator it = myGammaRecords.begin();
-            it!=myGammaRecords.end(); it++) {
+            it!=myGammaRecords.end();) {
 
         // Some gamma may be emitted but the energy level is not known
         // This is reported in the lnhb data as decays from the -1 level
         // Since we cannot correlate the emission with a change of energy
         // states of the daughter, we will treat this gamma as an xray
         // The halflife will be ignored
-        if (!(*it)->getLevelRecord()) {
+        if ((*it)->getLevelRecord()->getEnergy() < 1e-10) {
             egsInformation("EGS_Ensdf::parseEnsdf: Switching gamma with unknown "
                    "level to X-Ray for non-correlated sampling\n");
             xrayEnergies.push_back((*it)->getDecayEnergy());
@@ -307,6 +307,8 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
             // Erase the gamma record object
             myGammaRecords.erase(it);
+        } else {
+            ++it;
         }
     }
 
@@ -322,21 +324,26 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
 // Create record objects from the arrays
 void EGS_Ensdf::buildRecords() {
-    ParentRecord *LastParent = 0;
+    ParentRecord *lastParent = 0;
     if (!myParentRecords.empty()) {
-        LastParent = myParentRecords.back();
+        lastParent = myParentRecords.back();
     }
-    NormalizationRecord *LastNormalization = 0;
+    NormalizationRecord *lastNormalization = 0;
     if (!myNormalizationRecords.empty()) {
-        LastNormalization = myNormalizationRecords.back();
+        lastNormalization = myNormalizationRecords.back();
     }
-    LevelRecord *LastLevel = 0;
+    LevelRecord *lastLevel;
     if (!myLevelRecords.empty()) {
-        LastLevel = myLevelRecords.back();
+        if(!previousParent || previousParent == lastParent) {
+            lastLevel = myLevelRecords.back();
+        } else {
+            lastLevel = new LevelRecord();
+        }
+    } else {
+        lastLevel = new LevelRecord();
     }
 
     for (int i = 0; i < recordStack.size(); i++) {
-//         egsInformation("EGS_Ensdf::buildRecords:test %d\n",i);
         if (!recordStack[i].empty()) {
             if (i==0) {
 
@@ -358,25 +365,26 @@ void EGS_Ensdf::buildRecords() {
             }
             else if (i==6) {
                 myNormalizationRecords.push_back(new
-                                                 NormalizationRecord(recordStack[i], LastParent));
+                                                 NormalizationRecord(recordStack[i], lastParent));
             }
             else if (i==7) {
                 myLevelRecords.push_back(new LevelRecord(recordStack[i]));
+                previousParent = lastParent;
             }
             else if (i==8) {
                 myBetaMinusRecords.push_back(new
-                                             BetaMinusRecord(recordStack[i], LastParent,
-                                                     LastNormalization, LastLevel));
+                                             BetaMinusRecord(recordStack[i], lastParent,
+                                                     lastNormalization, lastLevel));
             }
             else if (i==9) {
                 myBetaPlusRecords.push_back(new
-                                            BetaPlusRecord(recordStack[i], LastParent,
-                                                    LastNormalization, LastLevel));
+                                            BetaPlusRecord(recordStack[i], lastParent,
+                                                    lastNormalization, lastLevel));
             }
             else if (i==10) {
                 myAlphaRecords.push_back(new
-                                         AlphaRecord(recordStack[i], LastParent,
-                                                     LastNormalization, LastLevel));
+                                         AlphaRecord(recordStack[i], lastParent,
+                                                     lastNormalization, lastLevel));
             }
             else if (i==11) {
                 egsInformation("EGS_Ensdf::buildRecords: Warning: Delayed particle not "
@@ -384,7 +392,7 @@ void EGS_Ensdf::buildRecords() {
             }
             else if (i==12) {
                 myGammaRecords.push_back(new
-                                         GammaRecord(recordStack[i], LastNormalization, LastLevel));
+                                         GammaRecord(recordStack[i], lastNormalization, lastLevel));
             }
 
             recordStack[i].clear();
@@ -551,9 +559,7 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
             gamma != myGammaRecords.end(); gamma++) {
 
-        egsInformation("test0\n");
         double energy = (*gamma)->getDecayEnergy();
-        egsInformation("test1\n");
         double guessedLevelEnergy =
             ((*gamma)->getLevelRecord()->getEnergy() - energy);
 
@@ -780,6 +786,7 @@ vector<AlphaRecord * > EGS_Ensdf::getAlphaRecords() const {
     return myAlphaRecords;
 }
 
+Record::Record() {};
 Record::Record(vector<string> ensdf) {
     if (!ensdf.empty()) {
         lines = ensdf;
@@ -1119,7 +1126,7 @@ double ParentRecord::getQ() const {
     return Q;
 }
 
-const ParentRecord *ParentRecordLeaf::getParentRecord() const {
+const ParentRecord* ParentRecordLeaf::getParentRecord() const {
     return getBranch();
 }
 
@@ -1181,7 +1188,12 @@ NormalizationRecordLeaf::NormalizationRecordLeaf(NormalizationRecord
 }
 
 // Level Record
-LevelRecord::LevelRecord(vector<string> ensdf):Record(ensdf) {
+LevelRecord::LevelRecord() {
+    energy = 0;
+    halfLife = 0;
+}
+LevelRecord::LevelRecord(vector<string> ensdf):
+                         Record(ensdf) {
     processEnsdf();
 }
 
@@ -1199,7 +1211,7 @@ double LevelRecord::getHalfLife() const {
     return halfLife;
 }
 
-const LevelRecord *LevelRecordLeaf::getLevelRecord() const {
+const LevelRecord* LevelRecordLeaf::getLevelRecord() const {
     return getBranch();
 }
 
@@ -1425,10 +1437,6 @@ LevelRecord *GammaRecord::getFinalLevel() const {
 
 void GammaRecord::setFinalLevel(LevelRecord *newLevel) {
     finalLevel = newLevel;
-}
-
-double GammaRecord::getHalfLife() const {
-    return halfLife;
 }
 
 // Alpha Record
