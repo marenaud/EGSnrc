@@ -56,7 +56,6 @@
 
 #include <complex>
 #include <limits>
-//#include <gsl/gsl_sf_gamma.h>
 
 
 using namespace std;
@@ -907,6 +906,7 @@ public:
         Emax = 0;
         currentTime = 0;
         ishower = -1; // Start with ishower -1 so first shower has index 0
+        totalGammaEnergy = 0;
 
         // Get the maximum energy for emissions
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
@@ -1006,11 +1006,17 @@ public:
         if (myGammas.size() > 0) {
             egsInformation("Gamma records:\n");
         }
+        EGS_I64 totalNumSampled = 0;
         for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                 gamma != myGammas.end(); gamma++) {
-
+            
+            totalNumSampled += (*gamma)->getNumSampled();
             egsInformation("%f %f\n", (*gamma)->getDecayEnergy(),
                            ((EGS_Float)(*gamma)->getNumSampled()/ishower)*100);
+        }
+        if (myGammas.size() > 0) {
+            egsInformation("Average gamma energy: %f\n", 
+                           totalGammaEnergy / totalNumSampled);
         }
         if (xrayEnergies.size() > 0) {
             egsInformation("X-Ray records:\n");
@@ -1070,6 +1076,8 @@ protected:
                         currentLevel = (*gamma)->getFinalLevel();
 
                         E = (*gamma)->getDecayEnergy();
+                        
+                        totalGammaEnergy += E;
 
                         return E;
                     }
@@ -1197,7 +1205,8 @@ private:
     EGS_Float                   currentTime,
                                 Emax,
                                 Tmax,
-                                spectrumWeight;
+                                spectrumWeight,
+                                totalGammaEnergy;
     EGS_I64                     ishower;
 
     EGS_RadionuclideBetaSpectrum *betaSpectra;
