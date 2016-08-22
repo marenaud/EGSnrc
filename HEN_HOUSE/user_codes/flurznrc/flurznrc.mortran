@@ -3975,8 +3975,7 @@ ELSEIF (SLOTE = -999) ["set up linear/log bins for SPR calcns"
    DO I =1,linbin[
      BINTOP(MAXIB-I) = EIN-(dble(I)*DELLIN);]
    "now set up logarithmic bins"
-    RATIO=(BINTOP(MAXIB-LINBIN)/
-      (ECUTIN-PRM))**(1./dble(MAXIB-LINBIN));
+    RATIO=(BINTOP(MAXIB-LINBIN)/(ECUTIN-PRM))**(1./dble(MAXIB-LINBIN));
     BINTOP(1) = (ECUTIN - PRM)*RATIO;
     DO IB = 2,MAXIB-LINBIN[
       BINTOP(IB) = BINTOP(IB-1)*RATIO;]

@@ -5874,8 +5874,7 @@ IF (IARG =  5) ["Particle step just taken"
 
          "Energy fluence:"
          SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)+
-                                          WEIGHT*(E(NP)-PRM*
-                                          ABS(IQ(NP)))/
+                                          WEIGHT*(E(NP)-PRM*ABS(IQ(NP)))/
                                           MAX(0.08716,ABS(WL));
          "Angle:"
          "change to degrees on output"
@@ -5895,8 +5894,7 @@ IF (IARG =  5) ["Particle step just taken"
          SCFLU_COV(IQL,ISCORE,ISZ,IPAR/2+1)=SCFLU_COV(IQL,ISCORE,ISZ,IPAR/2+1)+
                                           SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)*
                                           SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+2);
-         SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=WEIGHT*(E(NP)-PRM
-                                          *ABS(IQ(NP)))/
+         SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=WEIGHT*(E(NP)-PRM*ABS(IQ(NP)))/
                                           MAX(0.08716,ABS(WL));
 
          "Angle: also score angle*no. (weighted) now for covariance"
