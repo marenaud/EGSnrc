@@ -102,6 +102,27 @@ pyramid base is defined.
 The \c pyramid.geom example geometry file demonstrate the use
 of a pyramid object.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_pyramid
+        library     = egs_pyramid
+        type        = EGS_PyramidZ
+        points      = 1 1  -1 1  -1 -1  4 -1
+        tip         = 0 0 2
+        closed      = 1
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_pyramid
+
+:stop geometry definition:
+\endverbatim
+\image html egs_pyramid.png "A simple example"
+
 */
 template <class T>
 class EGS_PYRAMID_EXPORT EGS_PyramidT : public EGS_BaseGeometry {

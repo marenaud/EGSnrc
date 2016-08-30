@@ -46,11 +46,3 @@
     simulation geometry = my_box
 
 :stop geometry definition:
-
-
-
-
-
-
-
-    

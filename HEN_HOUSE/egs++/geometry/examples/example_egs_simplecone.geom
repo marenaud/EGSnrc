@@ -50,12 +50,3 @@
     simulation geometry = my_simple_cone
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-    

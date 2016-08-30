@@ -51,6 +51,3 @@
     simulation geometry = my_cylinders
 
 :stop geometry definition:
-
-
-    

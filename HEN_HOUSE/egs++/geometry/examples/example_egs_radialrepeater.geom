@@ -81,8 +81,3 @@
     simulation geometry = my_repetition_box
 
 :stop geometry definition:
-
-
-
-
-    

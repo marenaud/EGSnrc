@@ -57,11 +57,3 @@
     simulation geometry = my_transform
 
 :stop geometry definition:
-
-
-
-
-
-
-
-    

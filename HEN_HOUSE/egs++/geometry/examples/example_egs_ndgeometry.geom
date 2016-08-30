@@ -83,12 +83,3 @@
     simulation geometry = my_nd
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-    

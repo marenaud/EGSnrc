@@ -76,11 +76,3 @@
     simulation geometry = my_envelope
 
 :stop geometry definition:
-
-
-
-
-
-
-
-    

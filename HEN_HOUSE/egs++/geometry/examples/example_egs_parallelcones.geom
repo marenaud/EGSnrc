@@ -38,7 +38,7 @@
         name        = my_parallel_cones
         library     = egs_cones
         type        = EGS_ParallelCones
-        apex        = 0 0 4
+        apex        = 0 0 6
         axis        = 0 0 -1
         apex distances  = 1 2 3
         opening angle   = 30 # deg
@@ -72,14 +72,3 @@
     simulation geometry = cones
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-
-
-    

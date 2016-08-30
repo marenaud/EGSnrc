@@ -48,14 +48,3 @@
     simulation geometry = my_prism
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-
-
-    

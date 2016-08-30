@@ -63,11 +63,3 @@
     simulation geometry = my_union
 
 :stop geometry definition:
-
-
-
-
-
-
-
-    

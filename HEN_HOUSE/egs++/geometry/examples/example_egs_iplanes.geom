@@ -87,14 +87,3 @@
     simulation geometry = rho_z_phi
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-
-
-    

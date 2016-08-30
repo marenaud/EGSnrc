@@ -49,14 +49,3 @@
     simulation geometry = my_planes
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-
-
-    

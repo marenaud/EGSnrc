@@ -51,14 +51,3 @@
     simulation geometry = my_coneset
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-
-
-    

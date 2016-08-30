@@ -61,8 +61,3 @@
     simulation geometry = my_xyz_repeater
 
 :stop geometry definition:
-
-
-
-
-    

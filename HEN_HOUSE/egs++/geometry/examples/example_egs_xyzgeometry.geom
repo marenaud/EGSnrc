@@ -63,12 +63,3 @@
     simulation geometry = my_xyz
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-    

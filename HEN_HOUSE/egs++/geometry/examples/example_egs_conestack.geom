@@ -67,12 +67,3 @@
     simulation geometry = my_conestack
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-    

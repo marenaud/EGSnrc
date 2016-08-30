@@ -1,4 +1,3 @@
-
 ###############################################################################
 #
 #  EGSnrc egs++ sample geometry
@@ -27,60 +26,46 @@
 #
 ###############################################################################
 #
-#  An example geometry of egs_gstack.
+#  An example geometry of EGS_Planes.
 #
 #
 ###############################################################################
 
-
 :start geometry definition:
-    
+
+    # The base geometry, this will be the Chopping Device (CD)
+    # The base geometry can be any geometry, even a composite one
     :start geometry:
-        library = egs_cones
-        type = EGS_ConeStack
-        name = my_conestack
-        axis = 0 0 2.6 0 0 -1
-        :start layer:
-            thickness = 0.05
-            top radii = 0.
-            bottom radii = 0.0858
-            media = water
-        :stop layer:
-        :start layer:
-            thickness = 0.1
-            top radii = 0. 0.0858
-            bottom radii = 0.3125 0.35
-            media = air water
-        :stop layer:
-        :start layer:
-            thickness = 0.2
-            bottom radii = 0.3125 0.35
-            media = air water
-        :stop layer:
-        :start layer:
-            thickness = 2
-            top radii = 0.050 0.3125 0.35
-            bottom radii = 0.050 0.3125 0.35
-            media = water air water
-        :stop layer:
+        name        = my_cd_planes
+        library     = egs_planes
+        type        = EGS_Zplanes
+        positions   = -3 3
+        # No media required
     :stop geometry:
     
     :start geometry:
-        name        = my_box
-        library     = egs_box
-        box size    = 3 3 .5
+        name        = my_cd_cylinder
+        library     = egs_cylinders
+        type        = EGS_ZCylinders
+        radii       = 1.6 2
         :start media input:
-            media = water
+            media = air water
+            set medium = 1 1
         :stop media input:
     :stop geometry:
 
+    # The composite geometry
     :start geometry:
-        name            = my_stack
-        library         = egs_gstack
-        geometries      = my_conestack my_box
-        tolerance       = 1e-4
+        name            = my_cd
+        library         = egs_cdgeometry
+        base geometry   = my_cd_planes
+        # set geometry = 1 geom means:
+        # "in region 1 of the basegeometry, use geometry "geom"
+        set geometry   = 0 my_cd_cylinder
+        # The final region numbers are attributed by the cd geometry object;
+        # Use the viewer to determine region numbers
     :stop geometry:
 
-    simulation geometry = my_stack
+    simulation geometry = my_cd
 
 :stop geometry definition:

@@ -83,12 +83,3 @@
     simulation geometry = my_cd
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-    

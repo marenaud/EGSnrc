@@ -1,4 +1,3 @@
-
 ###############################################################################
 #
 #  EGSnrc egs++ sample geometry
@@ -73,14 +72,3 @@
     simulation geometry = collection
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-
-
-    

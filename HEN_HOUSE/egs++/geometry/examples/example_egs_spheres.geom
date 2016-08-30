@@ -49,12 +49,3 @@
     simulation geometry = my_spheres
 
 :stop geometry definition:
-
-
-
-
-
-
-
-
-    
