@@ -193,8 +193,10 @@ public:
             if (up > 0) {
                 tt = (d2 - d)/up;
             }
-            else {
+            else if(up < 0) {
                 tt = (d1 - d)/up;
+            } else {
+                tt = 0;
             }
             if (tt <= t) {
                 t = tt;
