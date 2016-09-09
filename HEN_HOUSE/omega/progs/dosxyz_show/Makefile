@@ -43,13 +43,13 @@ X11_include = -I/usr/X11R6/include
 # On our system, Motif include files are in /usr/X11R6/include/Xm =>
 # we don't need a separate -I for Motif. If this is different on your
 # system, adjust accordingly.
-Motif_include =
+Motif_include = -I/opt/local/include
 
 X11_libdir = -L/usr/X11R6/lib
 # On our system, the Motif library is /usr/X11R6/lib =>
 # we don't need a separate -L for Motif. If this is different on your
 # system, adjust accordingly.
-Motif_libdir =
+Motif_libdir = -L/opt/local/lib
 
 libs = -lXm -lXt -lX11 -lm
 
@@ -60,3 +60,8 @@ defines =
 
 $(executable): dosxyz_show.c
 	$(CC) -O2 $(defines) $(X11_include) $(Motif_include) -o $@ $(X11_libdir) $(Motif_libdir) dosxyz_show.c $(libs)
+
+clean:
+	$(REMOVE) $(executable)
+
+.PHONY: clean
