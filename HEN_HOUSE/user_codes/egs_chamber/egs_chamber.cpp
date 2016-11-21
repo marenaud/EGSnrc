@@ -1172,12 +1172,18 @@ int EGS_ChamberApplication::initScoring() {
                     cg = 0;
                 }
                 
-                cg->getNumberRegions(cavString, cav);
-                cg->getLabelRegions(cavString, cav);
-                cg->getNumberRegions(cs_regString, cs_reg);
-                cg->getLabelRegions(cs_regString, cs_reg);
-                cg->getNumberRegions(ecut_rString, ecut_r);
-                cg->getLabelRegions(ecut_rString, ecut_r);
+                EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
+                if( !g ) {
+                    egsWarning("initScoring: no geometry named %s -->"
+                        " input ignored\n",gname.c_str());
+                } else {
+                    g->getNumberRegions(cavString, cav);
+                    g->getLabelRegions(cavString, cav);
+                    g->getNumberRegions(cs_regString, cs_reg);
+                    g->getLabelRegions(cs_regString, cs_reg);
+                    g->getNumberRegions(ecut_rString, ecut_r);
+                    g->getLabelRegions(ecut_rString, ecut_r);
+                }
                 
                 if (do_cse && cs_reg[0]<0 && cs_reg[1]<0 && cs_reg.size()==2) {
                     int start = -cs_reg[0];
@@ -1199,11 +1205,7 @@ int EGS_ChamberApplication::initScoring() {
                     err13 = 1;
                 }
 
-                EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
-                if( !g ) egsWarning("initScoring: no geometry named %s -->"
-                        " input ignored\n",gname.c_str());
-
-                else {
+                if( g ) {
                     
                     int nreg = g->regions();
                     int *regs = new int [cav.size()];
