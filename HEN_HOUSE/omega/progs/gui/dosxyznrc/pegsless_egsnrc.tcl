@@ -621,10 +621,6 @@ proc edit_medium { mednum } {
      set dcf_specified($mednum) [read_dcf $mednum 1]
    }
    use_dcf $mednum
-
-   #gas pressure
-   enable_disable_gasp_input $mednum 
-
 }
 
 proc set_df_area { searchind } {
@@ -687,7 +683,7 @@ proc set_medium_type { mednum type } {
 }
 
 proc use_dcf { mednum } {
-   #enable or disable medium composition table, medium type, rho inputs
+   #enable or disable medium composition table, medium type, rho inputs, gasp input
    #density file input
    global nelem arr dcf_specified ipz
 
@@ -712,6 +708,8 @@ proc use_dcf { mednum } {
     .define$mednum.u.r.top.type.bot.mb configure -state normal
     .define$mednum.u.r.top.rho.bot.val configure -state normal 
     .define$mednum.u.r.top.rho.bot.scale configure -state normal
+    .define$mednum.u.r.bot.gasp.l.chk configure -state normal
+    .define$mednum.u.r.bot.gasp.l.lab configure -state normal
     .define$mednum.b.bot.lab configure -state disabled 
     .define$mednum.b.bot.searchdir configure -state disabled 
     .define$mednum.b.bot.fname configure -state disabled
@@ -737,23 +735,27 @@ proc use_dcf { mednum } {
     .define$mednum.u.r.top.type.bot.mb configure -state disabled 
     .define$mednum.u.r.top.rho.bot.val configure -state disabled 
     .define$mednum.u.r.top.rho.bot.scale configure -state disabled 
+    .define$mednum.u.r.bot.gasp.l.chk configure -state disabled 
+    .define$mednum.u.r.bot.gasp.l.lab configure -state disabled 
     .define$mednum.b.bot.lab configure -state normal 
     .define$mednum.b.bot.searchdir configure -state normal 
     .define$mednum.b.bot.fname configure -state normal 
     .define$mednum.b.bot.browse configure -state normal 
    }
+   #enable or disable gasp input according to settings
+   enable_disable_gasp_input $mednum 
 }
 
 proc enable_disable_gasp_input { mednum } {
    #enable/disable gas pressure input
-   global is_gas
-  
-   if {$is_gas($mednum)==0} {
+   global is_gas dcf_specified
+ 
+   if {$is_gas($mednum)==1 && $dcf_specified($mednum)==0} {
+     .define$mednum.u.r.bot.gasp.r.lab configure -state normal
+     .define$mednum.u.r.bot.gasp.r.val configure -state normal  
+   } else {
     .define$mednum.u.r.bot.gasp.r.lab configure -state disabled
     .define$mednum.u.r.bot.gasp.r.val configure -state disabled
-   } elseif {$is_gas($mednum)==1} {
-    .define$mednum.u.r.bot.gasp.r.lab configure -state normal
-    .define$mednum.u.r.bot.gasp.r.val configure -state normal 
    }
 }
     
@@ -1003,14 +1005,6 @@ proc write_pegsless_data { fileid } {
                if { $rho_scale($i)==1} { set rho_mult 0.001 }
                puts $fileid " rho= [expr $rho_mult*$rho($i)]"
              }
-             }
-             if {$iaprim($i)!=""} {
-               if {$iaprim($i)==0} {
-                 puts $fileid " bremsstrahlung correction= KM"
-               } elseif {$iaprim($i)==1} {
-                 puts $fileid " bremsstrahlung correction= NRC"
-               } 
-             }
              if {$is_gas($i)==1} {
                 if {$gasp($i)>0.0} {
                    puts $fileid " gas pressure= $gasp($i)"
@@ -1018,6 +1012,14 @@ proc write_pegsless_data { fileid } {
                    #default to 1 atm
                    puts $fileid " gas pressure= 1.0"
                 }
+             }
+             }
+             if {$iaprim($i)!=""} {
+               if {$iaprim($i)==0} {
+                 puts $fileid " bremsstrahlung correction= KM"
+               } elseif {$iaprim($i)==1} {
+                 puts $fileid " bremsstrahlung correction= NRC"
+               } 
              }
              puts $fileid " :stop $inpmedium($i):"
          }
