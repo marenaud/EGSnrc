@@ -119,47 +119,46 @@ array set element_names {
    58 Ce
    59 Pr
    60 Nd
-   61 Nd
-   62 Pm
-   63 Sm
-   64 Eu
-   65 Gd
-   66 Tb
-   67 Dy
-   68 Ho
-   69 Er
-   70 Tm
-   71 Yb
-   72 Lu
-   73 Hf
-   74 Ta
-   75 W
-   76 Re
-    77 Os
-  78  Ir
-  79  Pt
-  80  Au
-  81  Hg
-  82  Tl
-  83  Pb
-  84  Bi
-  85  Po
-  86  At
-  87  Rn
-  88  Fr
-  89  Ra
-  90  Ac
-  91  Th
-  92  Pa
-  93  U
-  94  Np
-  95  Pu
-  96  Am
-  97  Cm
-  98  Bk
-  99  Cf
-  100  Es
-  101  Fm
+   61 Pm
+   62 Sm
+   63 Eu
+   64 Gd
+   65 Tb
+   66 Dy
+   67 Ho
+   68 Er
+   69 Tm
+   70 Yb
+   71 Lu
+   72 Hf
+   73 Ta
+   74 W
+   75 Re
+    76 Os
+  77  Ir
+  78  Pt
+  79  Au
+  80  Hg
+  81  Tl
+  82  Pb
+  83  Bi
+  84  Po
+  85  At
+  86  Rn
+  87  Fr
+  88  Ra
+  89  Ac
+  90  Th
+  91  Pa
+  92  U
+  93  Np
+  94  Pu
+  95  Am
+  96  Cm
+  97  Bk
+  98  Cf
+  99  Es
+  100  Fm
 }
 
 set med_type(0) "Compound"
@@ -856,7 +855,7 @@ proc read_dcf { mednum mode } {
     #opens the dcf for mednum and reads the composition and density
     #supposed to be used to return value of dcf_specified
     global density_file nelem rho elements pz_or_rhoz ipz 
-    global arr element_names rho_units egs_home hen_house
+    global arr element_names rho_units egs_home hen_house med_type
 
     #first check to see if the file exists
     if {[file exists $density_file($mednum)]==0} {
@@ -922,6 +921,8 @@ proc read_dcf { mednum mode } {
       .define$mednum.u.r.top.rho.bot.scale configure -text $rho_units(0)
       #and now...update the composition table (even though it's disabled)
       update_comp_table $mednum
+      #and medium type
+      .define$mednum.u.r.top.type.bot.mb configure -text $med_type($ipz($mednum))
     } else {
       if {$mode==0 || $mode==1} {
      #output a warning and let user keep trying
