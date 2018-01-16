@@ -4454,7 +4454,7 @@ ELSE[
 
     DO ii=1,num_blocks [
         DO jj=voxel_indices(2*ii),voxel_indices(2*ii+1)-1 [
-            dtemp = dd(jj);
+            dtemp = ddun(jj);
             $BINOUT dtemp;
         ]
     ]
