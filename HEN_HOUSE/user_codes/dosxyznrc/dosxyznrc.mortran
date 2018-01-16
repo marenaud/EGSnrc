@@ -4363,6 +4363,8 @@ INTEGER iimax,                     "max number of x cells"
         NUMFRAC,                   "number of voxels for av. rel. uncertainty"
         MAXI(20),MAXJ(20),MAXK(20),"indices for max 20 doses"
         num_nonzero,               "number of nonzero voxels"
+        num_blocks,                "number of voxel blocks"
+        start_block,               "keep track of contiguous nonzero voxels"
         voxel_indices($MAXDOSE),   "indices of nonzero voxels"
         egs_open_file;
 REAL    xbnd($IMAX+1),             "voxel x boundaries"
@@ -4388,6 +4390,8 @@ REPLACE {$BINOUT#;} WITH {write(unitnum){P1};};
 REPLACE {$IRDWD(#,#,#)} WITH {({P1}+({P2}-1)*iimax+({P3}-1)*iimax*jjmax)};
 
 num_nonzero = 0;
+num_blocks = 0;
+start_block = -1;
 ijkmax=iimax*jjmax*kkmax;
 
 IF(bindos=0)[
@@ -4403,34 +4407,56 @@ IF(bindos=0)[
 ELSE[
     DO ii=1,ijkmax[
         IF(dd(ii)>0.0)[
+            IF(start_block = -1) [
+                start_block = ii;
+            ]
             num_nonzero = num_nonzero + 1;
-            voxel_indices(num_nonzero) = ii;
+        ] ELSE [
+            IF(start_block ~= -1) [
+                "First 0 dose voxel after a block of nonzero voxels"
+                num_blocks = num_blocks + 1;
+                voxel_indices(2*num_blocks) = start_block;
+                voxel_indices(2*num_blocks+1) = ii;
+                start_block = -1;
+            ]
         ]
     ]
+    "Capture the final voxel block"
+    IF(start_block ~= -1) [
+        num_blocks = num_blocks + 1;
+        voxel_indices(2*num_blocks) = start_block;
+        voxel_indices(2*num_blocks+1) = ijkmax;
+    ]
 
-    "open the .bindos file for output"
-    unitnum=egs_open_file(unitnum,-1,1,'.bindos');
+    "open the .randydos file for output"
+    unitnum=egs_open_file(unitnum,-1,1,'.randydos');
     $BINOUT iimax,jjmax,kkmax;
     $BINOUT (xbnd(ii),ii=1,iimax+1);
     $BINOUT (ybnd(jj),jj=1,jjmax+1);
     $BINOUT (zbnd(kk),kk=1,kkmax+1);
 
     $BINOUT num_nonzero;
+    $BINOUT num_blocks;
 
-    "Writing voxel indices as a zero-indexed array even though fortran arrays"
-    "are one-indexed."
-    DO ii=1,num_nonzero[
-        $BINOUT voxel_indices(ii) - 1;
+    "Writing start/end indices of contiguous non-zero voxel doses, 0-indexed"
+    "To be interpreted as [start, end)"
+    DO ii=1,num_blocks [
+        $BINOUT voxel_indices(2*ii) - 1;
+        $BINOUT voxel_indices(2*ii+1) - 1;
     ]
 
-    DO ii=1,num_nonzero[
-        dtemp = dd(voxel_indices(ii));
-        $BINOUT dtemp;
+    DO ii=1,num_blocks [
+        DO jj=voxel_indices(2*ii),voxel_indices(2*ii+1)-1 [
+            dtemp = dd(jj);
+            $BINOUT dtemp;
+        ]
     ]
 
-    DO ii=1,num_nonzero[
-        dtemp = ddun(voxel_indices(ii));
-        $BINOUT dtemp;
+    DO ii=1,num_blocks [
+        DO jj=voxel_indices(2*ii),voxel_indices(2*ii+1)-1 [
+            dtemp = dd(jj);
+            $BINOUT dtemp;
+        ]
     ]
 ]
 
