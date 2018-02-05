@@ -269,11 +269,8 @@
 "I>   Example
 "I>   *******
 "I>
-"I>  The following input defines a single tungsten jaw oriented in the Y
-"I>  direction operating in step-and-shoot (MODE_$SYNCEJAWS=2) mode.
-"I>  The jaw settings (Z position, opening coordinates) are defined
-"I>  in the file $OMEGA_HOME/beamnrc/CMs/dynjaw.opening.file
-"I>  (included with the distribution).
+"I>  The following input defines two jaws oriented in the X and Y
+"I>  directions operating in static (MODE_$SYNCEJAWS=0) mode.
 "I>
 "I>  45, RMAX
 "I>  SYNCEJAW settings
@@ -397,7 +394,6 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
       DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) - Z(NP) + $BDY_TOL) / W(NP);
 
       XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
-      ZPLN_$SYNCEJAWS = Z(NP) + DIST*W(NP);
       XPEDGE_$SYNCEJAWS = XP_$SYNCEJAWS(ISCM_$SYNCEJAWS) - RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
                           + ROUNDMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
       XNEDGE_$SYNCEJAWS = XN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
@@ -503,7 +499,6 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
         DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS-1) - Z(NP) - $BDY_TOL) / W(NP);
 
         XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
-        ZPLN_$SYNCEJAWS = Z(NP) + DIST * W(NP);
 
         XPEDGE_$SYNCEJAWS = XP_$SYNCEJAWS(ISCM_$SYNCEJAWS) - RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
                             + ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
@@ -570,7 +565,6 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
           IF(DIST < 0)[ DIST = 0.0;]
 
           XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
-          ZPLN_$SYNCEJAWS = Z(NP) + DIST * W(NP);
           XPEDGE_$SYNCEJAWS = XP_$SYNCEJAWS(ISCM_$SYNCEJAWS) - RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
                               + ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
           XNEDGE_$SYNCEJAWS = XN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
@@ -1040,6 +1034,26 @@ DO I = 1,ISCM_MAX_$SYNCEJAWS ["loop to get each bar location"
           - (XN_$SYNCEJAWS(I) + RAD_$SYNCEJAWS(I)) < $BDY_TOL*3 )[
       XP_$SYNCEJAWS(I) = XP_$SYNCEJAWS(I) + $BDY_TOL*2;
       XN_$SYNCEJAWS(I) = XN_$SYNCEJAWS(I) - $BDY_TOL*2;
+   ]
+
+   IF(ZRAD_$SYNCEJAWS(I) + RAD_$SYNCEJAWS(I) < ZMAX_$SYNCEJAWS(I)) [
+     OUTPUT ICM_$SYNCEJAWS, I;
+        (//'***ERROR IN CM ',I4,' (SYNCEJAWS):'/
+           'Radius too small for jaw thickness'//);
+      IERR_GEOM(ICM_$SYNCEJAWS)=IERR_GEOM(ICM_$SYNCEJAWS)+1;
+   ]
+   IF(ZRAD_$SYNCEJAWS(I) - RAD_$SYNCEJAWS(I) > ZMIN_$SYNCEJAWS(I)) [
+     OUTPUT ICM_$SYNCEJAWS, I;
+        (//'***ERROR IN CM ',I4,' (SYNCEJAWS):'/
+           'Radius too small for jaw thickness'//);
+      IERR_GEOM(ICM_$SYNCEJAWS)=IERR_GEOM(ICM_$SYNCEJAWS)+1;
+   ]
+   IF (ZRAD_$SYNCEJAWS(I) < ZMIN_$SYNCEJAWS(I)
+      | ZRAD_$SYNCEJAWS(I) > ZMAX_$SYNCEJAWS(I)) [
+     OUTPUT ICM_$SYNCEJAWS, I;
+        (//'***ERROR IN CM ',I4,' (SYNCEJAWS):'/
+           'ZRAD must be between ZMIN and ZMAX'//);
+      IERR_GEOM(ICM_$SYNCEJAWS)=IERR_GEOM(ICM_$SYNCEJAWS)+1;
    ]
  ]
 ] "end of loop over paired bars/jaws"
