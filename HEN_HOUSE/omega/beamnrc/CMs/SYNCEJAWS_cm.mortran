@@ -215,10 +215,10 @@
 "I>
 "I>   Next input is only required if MODE_$SYNCEJAWS=0 (static)
 "I>
-"I>   5  XP_$SYNCEJAWS(I),XN_$SYNCEJAWS(I) (2F15.0)
+"I>   5  XN_$SYNCEJAWS(I),XP_$SYNCEJAWS(I) (2F15.0)
 "I>
-"I>        XP_$SYNCEJAWS(I):  positive bar/jaw x or y coodinate.
 "I>        XN_$SYNCEJAWS(I):  negative bar/jaw x or y coodinate.
+"I>        XP_$SYNCEJAWS(I):  positive bar/jaw x or y coodinate.
 "I>
 "I>   Next input is only required if MODE_$SYNCEJAWS=1 or 2
 "I>
@@ -230,7 +230,7 @@
 "I>      NFIELDS_$SYNCEJAWS (I10)
 "I>      FOR J=1,NFIELDS_$SYNCEJAWS[
 "I>        INDEX_$SYNCEJAWS(J) (F15.0)
-"I>        (XP_$SYNCEJAWS(I),XN_$SYNCEJAWS(I), I=1,ISCM_MAX_$SYNCEJAWS)
+"I>        (XN_$SYNCEJAWS(I),XP_$SYNCEJAWS(I), I=1,ISCM_MAX_$SYNCEJAWS)
 "I>      ]
 "I>
 "I>      where:
@@ -246,7 +246,7 @@
 "I>                         the settings used are a linear interpolation
 "I>                         between fields J-1 and J based on the random
 "I>                         number selected.  See manual for more details.
-"I>      XP_$SYNCEJAWS(I),XN_$SYNCEJAWS(I):
+"I>      XN_$SYNCEJAWS(I),XP_$SYNCEJAWS(I):
 "I>                         See description of input 5.  These are defined
 "I>                         for each field, J.
 "I>
@@ -351,24 +351,23 @@ INTEGER
    IRL,        "T>local region number (absolute), required by HOWNEAR macro"
    IB_$SYNCEJAWS,    "T>index to deal with round off errors"
    I_tpo,I_tne, "T>error indices"
+   REGPLOT_$SYNCEJAWS, " VALIDATION TO BE REMOVED "
    INBAR_$SYNCEJAWS,  "T>Variable to check if particle is inside bars"
    IRNEW_$SYNCEJAWS; "T>tentative new region number within CM (absolute)"
 
 $REAL
    DIST,       "T>distance to region boundary along current particle trajectory"
-   DIST1,      "T>holds value of DIST while further checks are done"
    XPLN_$SYNCEJAWS,  "T>X or Y at a plane surface along particle trajectory"
    ZPLN_$SYNCEJAWS,  "T>Z along particle trajectory"
    DXY_$SYNCEJAWS,
    DZ_$SYNCEJAWS,
    DELTA_$SYNCEJAWS,
    RCHECK_$SYNCEJAWS,
-   XPLOT_$SYNCEJAWS,
-   YPLOT_$SYNCEJAWS,
-   ZPLOT_$SYNCEJAWS,
+   XPLOT_$SYNCEJAWS,  " VALIDATION TO BE REMOVED "
+   YPLOT_$SYNCEJAWS,  " VALIDATION TO BE REMOVED "
+   ZPLOT_$SYNCEJAWS,  " VALIDATION TO BE REMOVED "
    XNEDGE_$SYNCEJAWS, "T>X/Y coord of edge of negative jaw"
-   XPEDGE_$SYNCEJAWS, "T>X/Y coord of edge of positive jaw"
-   RPLN_$SYNCEJAWS;  "T>Distance between particle and jaw radius curvature"
+   XPEDGE_$SYNCEJAWS; "T>X/Y coord of edge of positive jaw"
 
 DATA I_tpo,I_tne/0,0/;
 
@@ -377,7 +376,7 @@ IRL = IR(NP); "local region number (absolute)"
 " This replacement macros sets DNEAR as well as defining IR_$SYNCEJAWS,
  ;$SYNCEJAWS_CM_HOWNEAR(DNEAR(NP));
 
-" Boundary-crossing check 
+" Boundary-crossing check
 " ***********************
 "
 " Determine if current region number is within component module SYNCEJAWS, and
