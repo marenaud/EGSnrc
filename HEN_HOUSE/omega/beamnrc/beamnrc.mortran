@@ -3651,7 +3651,8 @@ IF(IO_OPT = 0  | IO_OPT >= 3) ["requested phase space files be output"
   "loop through CMs and determine if there are any synchronized ones"
   DO I=1,MAX_CMs[
     IF(CMTYPE(I)='SYNCJAWS' | CMTYPE(I)='SYNCVMLC' |
-       CMTYPE(I)='SYNCMLCE' | CMTYPE(I)='SYNCHDMLC')[
+       CMTYPE(I)='SYNCMLCE' | CMTYPE(I)='SYNCHDMLC' |
+       CMTYPE(I)='SYNCEJAWS')[
       "store fractional MU index in IAEA phsp files"
       I_MU_PHSP=1;
       EXIT;

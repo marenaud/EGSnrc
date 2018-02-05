@@ -425,7 +425,7 @@ text='REPLACE{$SYNC_CM_LIST} WITH {SYNCCMLIST(';
 write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
 DO i=1,num_cms[
    IF(cmtype(i)='SYNCJAWS' | cmtype(i)='SYNCVMLC' | cmtype(i)='SYNCMLCE' |
-      cmtype(i)='SYNCHDMLC') [
+      cmtype(i)='SYNCHDMLC' | cmtype(i)='SYNCEJAWS') [
       text='      '//$cstring(cmid(i))//',';
       write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
    ]

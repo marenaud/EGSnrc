@@ -1,0 +1,381 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: synchronized dynamic jaws          "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Tony Popescu, 2010                                        "
+"                   Julio Lobo, 2010                                          "
+"                                                                             "
+"  Contributors:    Frederic Tessier                                          "
+"                   Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally derived from the existing BEAMnrc JAWS component  "
+"  module and contributed back to NRC by the authors in 2010. It was rebased  "
+"  on the DYNJAWS component module by Blake Walters in 2013.                  "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     SYNCEJAWS miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+REPLACE {$MAX_N_$SYNCEJAWS} WITH {12}
+
+REPLACE {$MAXFIELD_$SYNCEJAWS} WITH {1024}
+
+REPLACE {$MAXFS_$SYNCEJAWS} WITH {{COMPUTE $MAX_N_$SYNCEJAWS*$MAXFIELD_$SYNCEJAWS}}
+
+"       ==================="
+;
+"-------------------------------------------------------------------------------
+"     $SYNCEJAWS (SYNCEJAWS) component module common                  ""toc:
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$SYNCEJAWS/
+"V>================
+"V>IRSTART_$SYNCEJAWS  = first region number for this CM
+"V>IREND_$SYNCEJAWS    = last region number for this CM
+"V>N_$SYNCEJAWS        = number of regions in CM
+"V>ISCM_$SYNCEJAWS     = index of pired bars in CM
+"V>TITLE_$SYNCEJAWS    = title of CM
+"V>XY_CHOICE_$SYNCEJAWS = chose X or Y oringtation of the bar
+"V>ZBACK_$SYNCEJAWS    = Back of CM
+"V>ZFRONT_$SYNCEJAWS   = Front of CM
+"V>IXY_CHOICE_$SYNCEJAWS(ISCM) = index for x or y bar direction
+"V>IR_$SYNCEJAWS       = local region number
+"V>ISCM_$SYNCEJAWS     = local sub-component region number
+"V>XY_$SYNCEJAWS       = X(NP) or Y(NP)
+"V>UV_$SYNCEJAWS       = U(NP) or V(NP)
+;
+REPLACE {;COMIN/CM_$SYNCEJAWS/;} WITH {
+   ;COMMON/CM_$SYNCEJAWS/ ZBACK_$SYNCEJAWS, ZFRONT_$SYNCEJAWS,
+      XY_$SYNCEJAWS,UV_$SYNCEJAWS,
+      IRSTART_$SYNCEJAWS,  IREND_$SYNCEJAWS,  N_$SYNCEJAWS,
+      IR_$SYNCEJAWS,IXY_CHOICE_$SYNCEJAWS,ISCM_$SYNCEJAWS,
+      TITLE_$SYNCEJAWS,TZMIN_$SYNCEJAWS,TZMAX_$SYNCEJAWS,
+      TPOS_$SYNCEJAWS,TNEG_$SYNCEJAWS;
+   $REAL
+      ZBACK_$SYNCEJAWS, ZFRONT_$SYNCEJAWS,
+      XY_$SYNCEJAWS,UV_$SYNCEJAWS,TZMIN_$SYNCEJAWS,TZMAX_$SYNCEJAWS,
+      TPOS_$SYNCEJAWS,TNEG_$SYNCEJAWS,TTEMP_$SYNCEJAWS,TTEMP2_$SYNCEJAWS;
+   INTEGER
+      IRSTART_$SYNCEJAWS,IREND_$SYNCEJAWS,
+      N_$SYNCEJAWS,IR_$SYNCEJAWS,
+      IXY_CHOICE_$SYNCEJAWS($MAX_N_$SYNCEJAWS), ISCM_$SYNCEJAWS;
+   CHARACTER*1 TITLE_$SYNCEJAWS(60);
+
+} "end of replacement defining common for this CM"
+;
+
+"V>COMMON/USERSYNCEJAWS/
+"V>
+"V>ISCM_MAX_$SYNCEJAWS = number of pired bars in CM
+"V>MODE_$SYNCEJAWS = 0 for static jaws, 1 for dynamic jaw positioning, 2
+"V>                for step-and-shoot positioning
+"V>NFIELDS_$SYNCEJAWS = no. of jaw fields
+"V>I_$SYNCEJAWS,J_$SYNCEJAWS = looping indices
+"V>ZMIN_$SYNCEJAWS(I)  = Zmin of a paired bar
+"V>ZMAX_$SYNCEJAWS(I)  = Zmax of a paired bar
+"V>RAD_$SYNCEJAWS(I)   = Radius of bars in this ISCM (X or Y)
+"V>XP_$SYNCEJAWS(I)   = Front of positive bar in this ISCM (X or Y)
+"V>XN_$SYNCEJAWS(I)   = Front of negative bar in this ISCM (X or Y)
+"V>DZMIN_$SYNCEJAWS(J) = values of Zmin for all bars for all fields
+"V>DZMAX_$SYNCEJAWS(J) = values of Zmax for all bars for all fields
+"V>DXP_$SYNCEJAWS(J)  = values of XP for all bars for all fields
+"V>DXN_$SYNCEJAWS(J)  = values of XN for all bars for all fields
+"V>INDEX_$SYNCEJAWS(K) = index for field I.  If INDEX_$SYNCEJAWS(K)>=
+"V>                            RNDM1_$SYNCEJAWS then field I is used.
+"V>INDEX1_$SYNCEJAWS,INDEX2_$SYNCEJAWS = temporary variables to store
+"V>                                  INDEX_$SYNCEJAWS(K) values so that
+"V>                                  jaw positions can be interpolated during
+"V>                                  dynamic simulations
+"V>RNDM1_$SYNCEJAWS = random no. (0,1) selected before each history and compared
+"V>                 to INDEX_$SYNCEJAWS(K) to determin what field to used
+"V>ICM_$SYNCEJAWS = CM no for $SYNCEJAWS.  Placed here because it is used in
+"V>                main BEAMnrc
+
+
+REPLACE {;COMIN/USER-$SYNCEJAWS/;} WITH {;
+
+COMMON/USER$SYNCEJAWS/ZMIN_$SYNCEJAWS,ZMAX_$SYNCEJAWS,ZRAD_$SYNCEJAWS,
+       XP_$SYNCEJAWS,XN_$SYNCEJAWS,RAD_$SYNCEJAWS,
+       XPT_$SYNCEJAWS,XNT_$SYNCEJAWS,
+       ROUNDMIN_$SYNCEJAWS,ROUNDMAX_$SYNCEJAWS,
+       DZMIN_$SYNCEJAWS,DZMAX_$SYNCEJAWS,
+       DXP_$SYNCEJAWS,DXN_$SYNCEJAWS,
+       RNDM1_$SYNCEJAWS,INDEX_$SYNCEJAWS,INDEX1_$SYNCEJAWS,
+       INDEX2_$SYNCEJAWS,ISCM_MAX_$SYNCEJAWS,MODE_$SYNCEJAWS,
+       NFIELDS_$SYNCEJAWS,I_$SYNCEJAWS,J_$SYNCEJAWS,ICM_$SYNCEJAWS;
+$REAL ZMIN_$SYNCEJAWS($MAX_N_$SYNCEJAWS),ZMAX_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
+      XP_$SYNCEJAWS($MAX_N_$SYNCEJAWS),XN_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
+      XPT_$SYNCEJAWS($MAX_N_$SYNCEJAWS,2),XNT_$SYNCEJAWS($MAX_N_$SYNCEJAWS,2),
+      RAD_$SYNCEJAWS($MAX_N_$SYNCEJAWS),ROUNDMIN_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
+      ROUNDMAX_$SYNCEJAWS($MAX_N_$SYNCEJAWS),ZRAD_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
+      DZMIN_$SYNCEJAWS($MAXFS_$SYNCEJAWS),DZMAX_$SYNCEJAWS($MAXFS_$SYNCEJAWS),
+      DXP_$SYNCEJAWS($MAXFS_$SYNCEJAWS),DXN_$SYNCEJAWS($MAXFS_$SYNCEJAWS),
+      RNDM1_$SYNCEJAWS,INDEX_$SYNCEJAWS($MAXFIELD_$SYNCEJAWS),INDEX1_$SYNCEJAWS,
+      INDEX2_$SYNCEJAWS;
+$INTEGER ISCM_MAX_$SYNCEJAWS,MODE_$SYNCEJAWS,NFIELDS_$SYNCEJAWS,
+        I_$SYNCEJAWS,J_$SYNCEJAWS,ICM_$SYNCEJAWS;
+$INTEGER BIMIN_$SYNCEJAWS, BIMAX_$SYNCEJAWS_$SYNCEJAWS, BIMID_$SYNCEJAWS;
+}
+
+REPLACE {$SYNCEJAWS_SET_COMP} WITH {;
+IF(MODE_$SYNCEJAWS=1 | MODE_$SYNCEJAWS=2)[
+  IF(BEAM_MU_INDEX=BEAM_MU_INDEX_OLD)[
+   "Added by Tony Popescu and Julio Lobo to communicate setting."
+   "The random number has not been set before this CM"
+   $RANDOMSET RNDM1_$SYNCEJAWS;
+   BEAM_MU_INDEX = RNDM1_$SYNCEJAWS;
+   ]
+   ELSE[
+   "the random number has already been set before this CM"
+   "so use this already set number"
+   RNDM1_$SYNCEJAWS = BEAM_MU_INDEX;
+   ]
+
+    IF (RNDM1_$SYNCEJAWS < INDEX_$SYNCEJAWS(NFIELDS_$SYNCEJAWS))  [
+
+        "Binary search"
+        IF (RNDM1_$SYNCEJAWS < INDEX_$SYNCEJAWS(1)) [
+            BIMAX_$SYNCEJAWS_$SYNCEJAWS = 1;
+        ]
+        ELSE [
+            BIMIN_$SYNCEJAWS = 1;
+            BIMAX_$SYNCEJAWS_$SYNCEJAWS = NFIELDS_$SYNCEJAWS;
+            WHILE (BIMIN_$SYNCEJAWS < BIMAX_$SYNCEJAWS_$SYNCEJAWS-1) [
+                BIMID_$SYNCEJAWS = BIMIN_$SYNCEJAWS +
+                    (BIMAX_$SYNCEJAWS_$SYNCEJAWS-BIMIN_$SYNCEJAWS)/2;
+                IF (INDEX_$SYNCEJAWS(BIMID_$SYNCEJAWS) >= RNDM1_$SYNCEJAWS) [
+                    BIMAX_$SYNCEJAWS_$SYNCEJAWS = BIMID_$SYNCEJAWS; ]
+                ELSE [ BIMIN_$SYNCEJAWS = BIMID_$SYNCEJAWS; ];
+            ]
+        ]
+        I_$SYNCEJAWS = BIMAX_$SYNCEJAWS_$SYNCEJAWS;
+
+        INDEX2_$SYNCEJAWS = INDEX_$SYNCEJAWS(I_$SYNCEJAWS);
+        IF(MODE_$SYNCEJAWS=1 & I_$SYNCEJAWS>1)
+                 INDEX1_$SYNCEJAWS = INDEX_$SYNCEJAWS(I_$SYNCEJAWS-1);
+        DO J_$SYNCEJAWS=1,ISCM_MAX_$SYNCEJAWS[
+           IF(MODE_$SYNCEJAWS=1 & I_$SYNCEJAWS>1)[
+             "calculate settings between fields I_$SYNCEJAWS and I_$SYNCEJAWS-1"
+             ZMIN_$SYNCEJAWS(J_$SYNCEJAWS)=
+               DZMIN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS)+
+               (DZMIN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS)-
+                DZMIN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS))
+		*((RNDM1_$SYNCEJAWS-INDEX1_$SYNCEJAWS)/
+                 (INDEX2_$SYNCEJAWS-INDEX1_$SYNCEJAWS));
+             ZMAX_$SYNCEJAWS(J_$SYNCEJAWS)=
+               DZMAX_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS)+
+               (DZMAX_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS)-
+                DZMAX_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS))
+		* ((RNDM1_$SYNCEJAWS-INDEX1_$SYNCEJAWS)/
+                 (INDEX2_$SYNCEJAWS-INDEX1_$SYNCEJAWS));
+             XP_$SYNCEJAWS(J_$SYNCEJAWS)=
+               DXP_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS)+
+               (DXP_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS)-
+                DXP_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS))*
+               ((RNDM1_$SYNCEJAWS-INDEX1_$SYNCEJAWS)/
+                 (INDEX2_$SYNCEJAWS-INDEX1_$SYNCEJAWS));
+             XN_$SYNCEJAWS(J_$SYNCEJAWS)=
+               DXN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS)+
+               (DXN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS)-
+                DXN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-2)*ISCM_MAX_$SYNCEJAWS))*
+               ((RNDM1_$SYNCEJAWS-INDEX1_$SYNCEJAWS)/
+                (INDEX2_$SYNCEJAWS-INDEX1_$SYNCEJAWS));
+           ]
+           ELSE[
+             ZMIN_$SYNCEJAWS(J_$SYNCEJAWS)=
+                DZMIN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS);
+             ZMAX_$SYNCEJAWS(J_$SYNCEJAWS)=
+                DZMAX_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS);
+             XP_$SYNCEJAWS(J_$SYNCEJAWS)=
+                 DXP_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS);
+             XN_$SYNCEJAWS(J_$SYNCEJAWS)=
+                 DXN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS);
+           ]
+           XPT_$SYNCEJAWS(J_$SYNCEJAWS,1)= XP_$SYNCEJAWS(J_$SYNCEJAWS) + $BDY_TOL;
+           XPT_$SYNCEJAWS(J_$SYNCEJAWS,2)= XP_$SYNCEJAWS(J_$SYNCEJAWS) - $BDY_TOL;
+           XNT_$SYNCEJAWS(J_$SYNCEJAWS,1)= XN_$SYNCEJAWS(J_$SYNCEJAWS) - $BDY_TOL;
+           XNT_$SYNCEJAWS(J_$SYNCEJAWS,2)= XN_$SYNCEJAWS(J_$SYNCEJAWS) + $BDY_TOL;
+        ]
+        Z_min_CM(ICM_$SYNCEJAWS+1)=ZMAX_$SYNCEJAWS(ISCM_MAX_$SYNCEJAWS);
+    ]
+]
+;
+}
+"-------------------------------------------------------------------------------
+"     $SYNCEJAWS (JAWS) HOWNEAR replacement macro                   ""toc:
+"-------------------------------------------------------------------------------
+"
+"
+REPLACE {$SYNCEJAWS_CM_HOWNEAR(#)} WITH {  "{P1} is DNEAR"
+"       ==================="
+CALL HOWNEAR_$SYNCEJAWS({P1});
+}
+;
+
+REPLACE {$SYNCEJAWS_SET_XY_UV(#)} WITH {;
+XY_$SYNCEJAWS = X(NP);
+UV_$SYNCEJAWS = U(NP);
+IF(IXY_CHOICE_$SYNCEJAWS({P1}) = 1)[
+  XY_$SYNCEJAWS = Y(NP);
+  UV_$SYNCEJAWS = V(NP);
+]
+}
+
+REPLACE {$SYNCEJAWS_FIND_TZMIN(#)} WITH {;
+    IF(W(NP) ~= 0) [
+        TZMIN_$SYNCEJAWS = (ZMIN_$SYNCEJAWS({P1}) - Z(NP)) / W(NP);
+    ]
+    ELSE [
+        TZMIN_$SYNCEJAWS = 1.0E10;
+    ]
+
+    IF (TZMIN_$SYNCEJAWS < 0.0) [
+      TZMIN_$SYNCEJAWS = 1E10;
+    ]
+}
+
+REPLACE {$SYNCEJAWS_FIND_TZMAX(#)} WITH {;
+    IF(W(NP) ~= 0) [
+        TZMAX_$SYNCEJAWS = (ZMAX_$SYNCEJAWS({P1}) - Z(NP)) / W(NP);
+    ]
+    ELSE [
+        TZMAX_$SYNCEJAWS = 1.0E10;
+    ]
+
+    IF (TZMAX_$SYNCEJAWS < 0.0) [
+      TZMAX_$SYNCEJAWS = 1E10;
+    ]
+}
+
+REPLACE {$SYNCEJAWS_FIND_TPOS(#)} WITH {;
+  " Intersection of particle with circle "
+  DXY_$SYNCEJAWS = XY_$SYNCEJAWS - XP_$SYNCEJAWS({P1});
+  DZ_$SYNCEJAWS = Z(NP) - ZRAD_$SYNCEJAWS({P1});
+  DELTA_$SYNCEJAWS = RAD_$SYNCEJAWS({P1}) * RAD_$SYNCEJAWS({P1})
+                    * (UV_$SYNCEJAWS * UV_$SYNCEJAWS + W(NP) * W(NP))
+                    - (W(NP) * DXY_$SYNCEJAWS - UV_$SYNCEJAWS * DZ_$SYNCEJAWS)
+                    * (W(NP) * DXY_$SYNCEJAWS - UV_$SYNCEJAWS * DZ_$SYNCEJAWS);
+
+  TPOS_$SYNCEJAWS = 1.0E10;
+  IF(DELTA_$SYNCEJAWS > 0) [
+    TTEMP_$SYNCEJAWS = -(DXY_$SYNCEJAWS * UV_$SYNCEJAWS + DZ_$SYNCEJAWS * W(NP))
+                       + SQRT(DELTA_$SYNCEJAWS);
+    TTEMP_$SYNCEJAWS = TTEMP_$SYNCEJAWS
+                       / (UV_$SYNCEJAWS * UV_$SYNCEJAWS + W(NP) * W(NP));
+
+    TTEMP2_$SYNCEJAWS = -(DXY_$SYNCEJAWS * UV_$SYNCEJAWS + DZ_$SYNCEJAWS * W(NP))
+                        - SQRT(DELTA_$SYNCEJAWS);
+    TTEMP2_$SYNCEJAWS = TTEMP2_$SYNCEJAWS
+                        / (UV_$SYNCEJAWS * UV_$SYNCEJAWS + W(NP) * W(NP));
+
+    RCHECK_$SYNCEJAWS = XY_$SYNCEJAWS + TTEMP_$SYNCEJAWS * UV_$SYNCEJAWS;
+    IF(RCHECK_$SYNCEJAWS > XP_$SYNCEJAWS({P1})) [TTEMP_$SYNCEJAWS = 1.0E10;]
+
+    RCHECK_$SYNCEJAWS = XY_$SYNCEJAWS + TTEMP2_$SYNCEJAWS * UV_$SYNCEJAWS;
+    IF(RCHECK_$SYNCEJAWS > XP_$SYNCEJAWS({P1})) [TTEMP2_$SYNCEJAWS = 1.0E10;]
+
+
+    IF(TTEMP_$SYNCEJAWS > 0.0 & TTEMP_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
+      TPOS_$SYNCEJAWS = TTEMP_$SYNCEJAWS;
+    ]
+
+    IF(TTEMP2_$SYNCEJAWS > 0.0 & TTEMP2_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
+      TPOS_$SYNCEJAWS = TTEMP2_$SYNCEJAWS;
+    ]
+  ]
+}
+
+REPLACE {$SYNCEJAWS_FIND_TNEG(#)} WITH {;
+  " Intersection of particle with circle "
+  DXY_$SYNCEJAWS = XY_$SYNCEJAWS - XN_$SYNCEJAWS({P1});
+  DZ_$SYNCEJAWS = Z(NP) - ZRAD_$SYNCEJAWS({P1});
+  DELTA_$SYNCEJAWS = RAD_$SYNCEJAWS({P1}) * RAD_$SYNCEJAWS({P1})
+                    * (UV_$SYNCEJAWS * UV_$SYNCEJAWS + W(NP) * W(NP))
+                    - (W(NP) * DXY_$SYNCEJAWS - UV_$SYNCEJAWS * DZ_$SYNCEJAWS)
+                    * (W(NP) * DXY_$SYNCEJAWS - UV_$SYNCEJAWS * DZ_$SYNCEJAWS);
+
+  TPOS_$SYNCEJAWS = 1.0E10;
+  IF(DELTA_$SYNCEJAWS > 0) [
+    TTEMP_$SYNCEJAWS = -(DXY_$SYNCEJAWS * UV_$SYNCEJAWS + DZ_$SYNCEJAWS * W(NP))
+                       + SQRT(DELTA_$SYNCEJAWS);
+    TTEMP_$SYNCEJAWS = TTEMP_$SYNCEJAWS
+                       / (UV_$SYNCEJAWS * UV_$SYNCEJAWS + W(NP) * W(NP));
+
+    TTEMP2_$SYNCEJAWS = -(DXY_$SYNCEJAWS * UV_$SYNCEJAWS + DZ_$SYNCEJAWS * W(NP))
+                        - SQRT(DELTA_$SYNCEJAWS);
+    TTEMP2_$SYNCEJAWS = TTEMP2_$SYNCEJAWS
+                        / (UV_$SYNCEJAWS * UV_$SYNCEJAWS + W(NP) * W(NP));
+
+    RCHECK_$SYNCEJAWS = XY_$SYNCEJAWS + TTEMP_$SYNCEJAWS * UV_$SYNCEJAWS;
+    IF(RCHECK_$SYNCEJAWS < XN_$SYNCEJAWS({P1})) [TTEMP_$SYNCEJAWS = 1.0E10;]
+
+    RCHECK_$SYNCEJAWS = XY_$SYNCEJAWS + TTEMP2_$SYNCEJAWS * UV_$SYNCEJAWS;
+    IF(RCHECK_$SYNCEJAWS < XN_$SYNCEJAWS({P1})) [TTEMP2_$SYNCEJAWS = 1.0E10;]
+
+
+    IF(TTEMP_$SYNCEJAWS > 0.0 & TTEMP_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
+      TPOS_$SYNCEJAWS = TTEMP_$SYNCEJAWS;
+    ]
+
+    IF(TTEMP2_$SYNCEJAWS > 0.0 & TTEMP2_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
+      TPOS_$SYNCEJAWS = TTEMP2_$SYNCEJAWS;
+    ]
+  ]
+}
+
+REPLACE {$SYNCEJAWS_HOWNEAR_TPOS(#)} WITH {;
+
+}
+
+"End of SYNCEJAWS_macros.mortran"
