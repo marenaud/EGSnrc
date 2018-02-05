@@ -213,10 +213,10 @@
 "I>
 "I>   Next input is only required if MODE_$SYNCEJAWS=0 (static)
 "I>
-"I>   5  XP_$SYNCEJAWS(I),XN_$SYNCEJAWS(I) (2F15.0)
+"I>   5  XN_$SYNCEJAWS(I),XP_$SYNCEJAWS(I) (2F15.0)
 "I>
-"I>        XP_$SYNCEJAWS(I):  positive bar/jaw x or y coodinate.
 "I>        XN_$SYNCEJAWS(I):  negative bar/jaw x or y coodinate.
+"I>        XP_$SYNCEJAWS(I):  positive bar/jaw x or y coodinate.
 "I>
 "I>   Next input is only required if MODE_$SYNCEJAWS=1 or 2
 "I>
@@ -228,7 +228,7 @@
 "I>      NFIELDS_$SYNCEJAWS (I10)
 "I>      FOR J=1,NFIELDS_$SYNCEJAWS[
 "I>        INDEX_$SYNCEJAWS(J) (F15.0)
-"I>        (XP_$SYNCEJAWS(I),XN_$SYNCEJAWS(I), I=1,ISCM_MAX_$SYNCEJAWS)
+"I>        (XN_$SYNCEJAWS(I),XP_$SYNCEJAWS(I), I=1,ISCM_MAX_$SYNCEJAWS)
 "I>      ]
 "I>
 "I>      where:
@@ -244,7 +244,7 @@
 "I>                         the settings used are a linear interpolation
 "I>                         between fields J-1 and J based on the random
 "I>                         number selected.  See manual for more details.
-"I>      XP_$SYNCEJAWS(I),XN_$SYNCEJAWS(I):
+"I>      XN_$SYNCEJAWS(I),XP_$SYNCEJAWS(I):
 "I>                         See description of input 5.  These are defined
 "I>                         for each field, J.
 "I>
@@ -355,20 +355,23 @@ INTEGER
    IRL,        "T>local region number (absolute), required by HOWNEAR macro"
    IB_$SYNCEJAWS,    "T>index to deal with round off errors"
    I_tpo,I_tne, "T>error indices"
+   REGPLOT_$SYNCEJAWS, " VALIDATION TO BE REMOVED "
+   INBAR_$SYNCEJAWS,  "T>Variable to check if particle is inside bars"
    IRNEW_$SYNCEJAWS; "T>tentative new region number within CM (absolute)"
 
 $REAL
    DIST,       "T>distance to region boundary along current particle trajectory"
-   DIST1,      "T>holds value of DIST while further checks are done"
    XPLN_$SYNCEJAWS,  "T>X or Y at a plane surface along particle trajectory"
    ZPLN_$SYNCEJAWS,  "T>Z along particle trajectory"
    DXY_$SYNCEJAWS,
    DZ_$SYNCEJAWS,
    DELTA_$SYNCEJAWS,
    RCHECK_$SYNCEJAWS,
+   XPLOT_$SYNCEJAWS,  " VALIDATION TO BE REMOVED "
+   YPLOT_$SYNCEJAWS,  " VALIDATION TO BE REMOVED "
+   ZPLOT_$SYNCEJAWS,  " VALIDATION TO BE REMOVED "
    XNEDGE_$SYNCEJAWS, "T>X/Y coord of edge of negative jaw"
-   XPEDGE_$SYNCEJAWS, "T>X/Y coord of edge of positive jaw"
-   RPLN_$SYNCEJAWS;  "T>Distance between particle and jaw radius curvature"
+   XPEDGE_$SYNCEJAWS; "T>X/Y coord of edge of positive jaw"
 
 DATA I_tpo,I_tne/0,0/;
 
@@ -377,7 +380,7 @@ IRL = IR(NP); "local region number (absolute)"
 " This replacement macros sets DNEAR as well as defining IR_$SYNCEJAWS,
  ;$SYNCEJAWS_CM_HOWNEAR(DNEAR(NP));
 
-" Boundary-crossing check 
+" Boundary-crossing check
 " ***********************
 "
 " Determine if current region number is within component module SYNCEJAWS, and
@@ -422,19 +425,41 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
 
         IF (TPOS_$SYNCEJAWS < DIST & TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
           " Going through the open field and hitting the positive jaw "
-          DIST = TPOS_$SYNCEJAWS;
-          IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
+          ZPLN_$SYNCEJAWS = Z(NP) + TPOS_$SYNCEJAWS*W(NP);
+          IF(ZPLN_$SYNCEJAWS > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)) [
+            DIST = TPOS_$SYNCEJAWS;
+            IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
+          ]
         ]
         ELSEIF (TNEG_$SYNCEJAWS < DIST & TNEG_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
           " Going through the open field and hitting the negative jaw "
-          DIST = TNEG_$SYNCEJAWS;
-          IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
+          ZPLN_$SYNCEJAWS = Z(NP) + TNEG_$SYNCEJAWS*W(NP);
+
+          IF(ZPLN_$SYNCEJAWS > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)) [
+            DIST = TNEG_$SYNCEJAWS;
+            IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
+          ]
         ]
       ]
     ]
     ELSE [ " Z(NP) > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) and W(NP) > 0"
       " Could be going in the bars through the rounded ends or straight "
       " through the open field. "
+
+      " First sanity check "
+      $SYNCEJAWS_IN_POS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+      IF (INBAR_$SYNCEJAWS = 1) [
+          IRNEW = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
+          USTEP = 0.0;
+          RETURN;
+      ]
+      $SYNCEJAWS_IN_NEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+      IF (INBAR_$SYNCEJAWS = 1) [
+          IRNEW = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
+          USTEP = 0.0;
+          RETURN;
+      ]
+
       DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) - Z(NP) + $BDY_TOL)/W(NP);
       IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
       IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
@@ -456,6 +481,7 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
 
     IF(DIST <= USTEP ) [ " particle to be moved to region boundary "
       USTEP = DIST;
+      "$SYNCEJAWS_OUTPUT;"
       IF (IRNEW_$SYNCEJAWS=1) ["leaving CM through back"
         CALL WHERE_AM_I(ICM_$SYNCEJAWS,1);
       ]
@@ -474,7 +500,7 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
       ELSE[ "  ISCM_$SYNCEJAWS > 1, means we're going into an upper jaw "
         ;$SYNCEJAWS_SET_XY_UV(ISCM_$SYNCEJAWS-1);
 
-        DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS-1) - Z(NP) + $BDY_TOL) / W(NP);
+        DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS-1) - Z(NP) - $BDY_TOL) / W(NP);
 
         XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
         ZPLN_$SYNCEJAWS = Z(NP) + DIST * W(NP);
@@ -499,6 +525,21 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
     ELSE [ " Z(NP) > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) "
       " Could be going in the bars through the rounded ends or straight "
       " through the open field. "
+
+      " First sanity check "
+      $SYNCEJAWS_IN_POS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+      IF (INBAR_$SYNCEJAWS = 1) [
+          IRNEW = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
+          USTEP = 0.0;
+          RETURN;
+      ]
+      $SYNCEJAWS_IN_NEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+      IF (INBAR_$SYNCEJAWS = 1) [
+          IRNEW = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
+          USTEP = 0.0;
+          RETURN;
+      ]
+
       DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP) - $BDY_TOL)/W(NP);
       IF(DIST < 0)[ DIST = 0.0;]
 
@@ -550,6 +591,7 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
 
     IF(DIST <= USTEP ) [
       USTEP = DIST;
+      "$SYNCEJAWS_OUTPUT;"
       IF(IRNEW_$SYNCEJAWS = 1)["particle moving out from front CM"
         CALL WHERE_AM_I(ICM_$SYNCEJAWS,-1);
       ]
@@ -574,39 +616,35 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
     ]
     IF(DIST <= USTEP) ["particle to be moved to region boundary"
       USTEP = DIST;
+      "$SYNCEJAWS_OUTPUT;"
       IRNEW = IRNEW_$SYNCEJAWS; "new region number"
     ]
   ]
 ] " End of region 1 "
 ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
   IB_$SYNCEJAWS=2;
+  " Sanity check "
+  $SYNCEJAWS_IN_POS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+  IF (INBAR_$SYNCEJAWS ~= 1) [
+    IRNEW = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
+    USTEP = 0.0;
+    RETURN;
+  ]
+
   IF(W(NP) > 0.0) [
     " Assume it will hit the bottom face for now "
-    IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
-    IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
-
     DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)+$BDY_TOL)/W(NP);
     " Edge case checks copied from SYNCJAWS "
     IF(DIST < 0)[DIST = 0.0;]
     IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
+    IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
+    IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
 
     $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
     IF(TPOS_$SYNCEJAWS < DIST) [
       DIST = TPOS_$SYNCEJAWS;
       IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
-      IF (DIST < 0) [ DIST = 0.0;]
-      IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
-    ]
-
-    IF(DIST <= USTEP) ["particle to be moved to region boundary"
-      USTEP = DIST;
-      IF (IRNEW_$SYNCEJAWS=1) ["leaving CM through back"
-        CALL WHERE_AM_I(ICM_$SYNCEJAWS,1);
-      ]
-      ELSE ["still in CM, entering between bars"
-        IRNEW = IRNEW_$SYNCEJAWS; "new region number"
-      ]
     ]
   ] " End of W > 0.0 "
   ELSEIF (W(NP) < 0.0) [ " W < 0.0"
@@ -616,7 +654,7 @@ ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
 
     $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
-    IF (TPOS_$SYNCEJAWS < TZMIN_$SYNCEJAWS) [
+    IF (TPOS_$SYNCEJAWS < DIST) [
       DIST = TPOS_$SYNCEJAWS;
     ]
   ]
@@ -631,6 +669,7 @@ ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
 
   IF (DIST <= USTEP) [
     USTEP = DIST;
+    "$SYNCEJAWS_OUTPUT;"
     IF (IRNEW_$SYNCEJAWS=1) [ "leaving CM through back"
       CALL WHERE_AM_I(ICM_$SYNCEJAWS,1);
     ]
@@ -641,8 +680,16 @@ ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
 ]
 ELSEIF (IR_$SYNCEJAWS = 3 * ISCM_$SYNCEJAWS) [ " Negative bars "
   IB_$SYNCEJAWS = 2;
+  " Sanity check "
+  $SYNCEJAWS_IN_NEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+  IF (INBAR_$SYNCEJAWS ~= 1) [
+    IRNEW = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
+    USTEP = 0.0;
+    RETURN;
+  ]
+
   IF(W(NP) > 0.0) [
-    DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)+$BDY_TOL)/W(NP);
+    DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) - Z(NP) + $BDY_TOL) / W(NP);
     IF(DIST < 0)[DIST = 0.0;]
     IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
     IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
@@ -650,29 +697,19 @@ ELSEIF (IR_$SYNCEJAWS = 3 * ISCM_$SYNCEJAWS) [ " Negative bars "
 
     $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
-    IF(TNEG_$SYNCEJAWS < TZMAX_$SYNCEJAWS) [
+    IF(TNEG_$SYNCEJAWS < DIST) [
       DIST = TNEG_$SYNCEJAWS;
       IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
     ]
-
-    IF(DIST <= USTEP) ["particle to be moved to region boundary"
-      USTEP = DIST;
-      IF (IRNEW_$SYNCEJAWS=1) ["leaving CM through back"
-        CALL WHERE_AM_I(ICM_$SYNCEJAWS,1);
-      ]
-      ELSE ["still in CM, entering between bars"
-        IRNEW = IRNEW_$SYNCEJAWS; "new region number"
-      ]
-    ]
   ] " End of W > 0.0 "
   ELSEIF (W(NP) < 0.0) [ " W < 0.0"
-    DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)-$BDY_TOL)/W(NP);
+    DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) - Z(NP) - $BDY_TOL) / W(NP);
     IF(DIST < 0)[DIST = 0.0;]
-    IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
+    IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3 * (ISCM_$SYNCEJAWS-1);
 
     $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
-    IF (TNEG_$SYNCEJAWS < TZMIN_$SYNCEJAWS) [
+    IF (TNEG_$SYNCEJAWS < DIST) [
       DIST = TNEG_$SYNCEJAWS;
     ]
   ]
@@ -685,12 +722,13 @@ ELSEIF (IR_$SYNCEJAWS = 3 * ISCM_$SYNCEJAWS) [ " Negative bars "
     ]
   ]
 
-  IF (DIST <= USTEP) [
+  IF(DIST <= USTEP) ["particle to be moved to region boundary"
     USTEP = DIST;
-    IF (IRNEW_$SYNCEJAWS=1) [ "leaving CM through back"
+    "$SYNCEJAWS_OUTPUT;"
+    IF (IRNEW_$SYNCEJAWS=1) ["leaving CM through back"
       CALL WHERE_AM_I(ICM_$SYNCEJAWS,1);
     ]
-    ELSE [ "still in CM, entering between bars"
+    ELSE ["still in CM, entering between bars"
       IRNEW = IRNEW_$SYNCEJAWS; "new region number"
     ]
   ]
@@ -1237,8 +1275,8 @@ BDYTOL = $BDY_TOL;
 DO I = 1,ISCM_MAX_$SYNCEJAWS ["loop through bars"
   XPT_$SYNCEJAWS(I,1) = XP_$SYNCEJAWS(I) + BDYTOL;
   XPT_$SYNCEJAWS(I,2) = XP_$SYNCEJAWS(I) - BDYTOL;
-  XNT_$SYNCEJAWS(I,1) = XN_$SYNCEJAWS(I) + BDYTOL;
-  XNT_$SYNCEJAWS(I,2) = XN_$SYNCEJAWS(I) - BDYTOL;
+  XNT_$SYNCEJAWS(I,1) = XN_$SYNCEJAWS(I) - BDYTOL;
+  XNT_$SYNCEJAWS(I,2) = XN_$SYNCEJAWS(I) + BDYTOL;
 ] "end of loop over I"
 
 ]
