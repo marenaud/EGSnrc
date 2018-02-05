@@ -392,9 +392,9 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
       XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
       ZPLN_$SYNCEJAWS = Z(NP) + DIST*W(NP);
       XPEDGE_$SYNCEJAWS = XP_$SYNCEJAWS(ISCM_$SYNCEJAWS) - RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
-                          + ROUNDMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS);
+                          + ROUNDMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
       XNEDGE_$SYNCEJAWS = XN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
-                          - ROUNDMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS);
+                          - ROUNDMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
 
       IF (XPLN_$SYNCEJAWS > XPEDGE_$SYNCEJAWS) [
         " Going in positive bar "
@@ -407,26 +407,21 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
       ELSE [
         " Could be going in the bars through the rounded ends or straight "
         " through the open field. "
-        $SYNCEJAWS_FIND_TZMAX(ISCM_$SYNCEJAWS);
-        $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
-        $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
+        DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP) + $BDY_TOL)/W(NP);
+        IF(DIST < 0) [DIST = 0.0;]
+        IF(DIST=0. & ISCM_$SYNCEJAWS=ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
+        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
+        IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
 
-        IF (TZMAX_$SYNCEJAWS < TPOS_$SYNCEJAWS & TZMAX_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
-          " Going through the open field without hitting anything "
-          DIST = TZMAX_$SYNCEJAWS;
-          " Edge case checks copied over from SYNCEJAWS "
-          IF(DIST < 0) [DIST = 0.0;]
-          IF(DIST=0. & ISCM_$SYNCEJAWS=ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
+        $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+        $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
-          IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
-          IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
-        ]
-        ELSEIF (TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
+        IF (TPOS_$SYNCEJAWS < DIST & TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
           " Going through the open field and hitting the positive jaw "
           DIST = TPOS_$SYNCEJAWS;
           IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
         ]
-        ELSE [
+        ELSEIF (TNEG_$SYNCEJAWS < DIST & TNEG_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
           " Going through the open field and hitting the negative jaw "
           DIST = TNEG_$SYNCEJAWS;
           IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
@@ -436,26 +431,19 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
     ELSE [ " Z(NP) > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) and W(NP) > 0"
       " Could be going in the bars through the rounded ends or straight "
       " through the open field. "
-      $SYNCEJAWS_FIND_TZMAX(ISCM_$SYNCEJAWS);
-      $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
-      $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
+      DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) - Z(NP) + $BDY_TOL)/W(NP);
+      IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
+      IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
 
-      IF (TZMAX_$SYNCEJAWS < TPOS_$SYNCEJAWS & TZMAX_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
-        " Going through the open field without hitting anything "
-        DIST = TZMAX_$SYNCEJAWS;
-        " Edge case checks copied over from SYNCEJAWS "
-        IF(DIST < 0) [DIST = 0.0;]
-        IF(DIST=0. & ISCM_$SYNCEJAWS=ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
+      $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+      $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
-        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
-        IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
-      ]
-      ELSEIF (TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
+      IF (TPOS_$SYNCEJAWS < DIST & TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
         " Going through the open field and hitting the positive jaw "
         DIST = TPOS_$SYNCEJAWS;
         IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
       ]
-      ELSE [
+      ELSEIF (TNEG_$SYNCEJAWS < DIST & TNEG_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
         " Going through the open field and hitting the negative jaw "
         DIST = TNEG_$SYNCEJAWS;
         IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
@@ -485,11 +473,14 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
         DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS-1) - Z(NP) + $BDY_TOL) / W(NP);
 
         XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
-        ZPLN_$SYNCEJAWS = Z(NP) + DIST*W(NP);
+        ZPLN_$SYNCEJAWS = Z(NP) + DIST * W(NP);
+
         XPEDGE_$SYNCEJAWS = XP_$SYNCEJAWS(ISCM_$SYNCEJAWS) - RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
-                            + ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS);
+                            + ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
         XNEDGE_$SYNCEJAWS = XN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
-                            - ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS);
+                            - ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
+
+        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-2);
 
         IF (XPLN_$SYNCEJAWS > XPEDGE_$SYNCEJAWS) [
           " Going in positive bar of above jaw "
@@ -504,11 +495,23 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
     ELSE [ " Z(NP) > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS) "
       " Could be going in the bars through the rounded ends or straight "
       " through the open field. "
-      $SYNCEJAWS_FIND_TZMIN(ISCM_$SYNCEJAWS);
-      $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
-      $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
+      DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP) - $BDY_TOL)/W(NP);
+      IF(DIST < 0)[ DIST = 0.0;]
 
-      IF (TZMIN_$SYNCEJAWS < TPOS_$SYNCEJAWS & TZMIN_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
+      $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+      $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+
+      IF (TPOS_$SYNCEJAWS < DIST & TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
+        " Going through the open field and hitting the positive jaw "
+        DIST = TPOS_$SYNCEJAWS;
+        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
+      ]
+      ELSEIF (TNEG_$SYNCEJAWS < DIST & TNEG_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
+        " Going through the open field and hitting the negative jaw "
+        DIST = TNEG_$SYNCEJAWS;
+        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
+      ]
+      ELSE [
         " Going through the open field without hitting anything "
         IF(ISCM_$SYNCEJAWS = 1)[
           DIST = (ZFRONT_$SYNCEJAWS - Z(NP))/W(NP);
@@ -518,15 +521,17 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
         ELSE[ "  ISCM_$SYNCEJAWS > 1, means we're going into an upper jaw "
           ;$SYNCEJAWS_SET_XY_UV(ISCM_$SYNCEJAWS-1);
 
-          DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS-1) - Z(NP) + $BDY_TOL) / W(NP);
+          DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS-1) - Z(NP) - $BDY_TOL) / W(NP);
+          IF(DIST < 0)[ DIST = 0.0;]
 
           XPLN_$SYNCEJAWS = XY_$SYNCEJAWS + UV_$SYNCEJAWS * DIST;
-          ZPLN_$SYNCEJAWS = Z(NP) + DIST*W(NP);
+          ZPLN_$SYNCEJAWS = Z(NP) + DIST * W(NP);
           XPEDGE_$SYNCEJAWS = XP_$SYNCEJAWS(ISCM_$SYNCEJAWS) - RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
-                              + ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS);
+                              + ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
           XNEDGE_$SYNCEJAWS = XN_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS)
-                              - ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS);
+                              - ROUNDMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS) + $BDY_TOL;
 
+          IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-2);
           IF (XPLN_$SYNCEJAWS > XPEDGE_$SYNCEJAWS) [
             " Going in positive bar of above jaw "
             IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-2) + 1;
@@ -536,16 +541,6 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
             IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-2) + 2;
           ]
         ]
-      ]
-      ELSEIF (TPOS_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
-        " Going through the open field and hitting the positive jaw "
-        DIST = TPOS_$SYNCEJAWS;
-        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
-      ]
-      ELSE [
-        " Going through the open field and hitting the negative jaw "
-        DIST = TNEG_$SYNCEJAWS;
-        IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
       ]
     ]
 
@@ -564,12 +559,12 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
     IF (Z(NP) > ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)) [
       IF (UV_$SYNCEJAWS > 0.0) [
         IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 1;
-        $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
+        $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
         DIST = TPOS_$SYNCEJAWS;
       ]
       ELSE [
         IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1) + 2;
-        $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
+        $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
         DIST = TNEG_$SYNCEJAWS;
       ]
     ]
@@ -582,21 +577,24 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-2) [
 ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
   IB_$SYNCEJAWS=2;
   IF(W(NP) > 0.0) [
+    " Assume it will hit the bottom face for now "
     IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
     IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
 
-    $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
-    $SYNCEJAWS_FIND_TZMAX(ISCM_$SYNCEJAWS);
+    DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)+$BDY_TOL)/W(NP);
+    " Edge case checks copied from SYNCJAWS "
+    IF(DIST < 0)[DIST = 0.0;]
+    IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
 
-    IF(TZMAX_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
-      DIST = TZMAX_$SYNCEJAWS;
-      " Edge case checks copied from SYNCJAWS "
+    $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+
+    IF(TPOS_$SYNCEJAWS < DIST) [
+      DIST = TPOS_$SYNCEJAWS;
+      IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
       IF (DIST < 0) [ DIST = 0.0;]
       IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
     ]
-    ELSE [
-      DIST = TPOS_$SYNCEJAWS;
-    ]
+
     IF(DIST <= USTEP) ["particle to be moved to region boundary"
       USTEP = DIST;
       IF (IRNEW_$SYNCEJAWS=1) ["leaving CM through back"
@@ -608,15 +606,13 @@ ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
     ]
   ] " End of W > 0.0 "
   ELSEIF (W(NP) < 0.0) [ " W < 0.0"
-    $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
-    $SYNCEJAWS_FIND_TZMIN(ISCM_$SYNCEJAWS);
-
+    DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)-$BDY_TOL)/W(NP);
+    IF(DIST < 0)[DIST = 0.0;]
     IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
-    IF (TZMIN_$SYNCEJAWS < TPOS_$SYNCEJAWS) [
-      DIST = TZMIN_$SYNCEJAWS;
-      IF (DIST < 0) [ DIST = 0.0;]
-    ]
-    ELSE [
+
+    $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+
+    IF (TPOS_$SYNCEJAWS < TZMIN_$SYNCEJAWS) [
       DIST = TPOS_$SYNCEJAWS;
     ]
   ]
@@ -624,7 +620,7 @@ ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
     DIST=1.0E20;
     IF(UV_$SYNCEJAWS < 0.0)[
       IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
-      $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS);
+      $SYNCEJAWS_FIND_TPOS(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
       DIST = TPOS_$SYNCEJAWS;
     ]
   ]
@@ -642,21 +638,19 @@ ELSEIF (IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
 ELSEIF (IR_$SYNCEJAWS = 3 * ISCM_$SYNCEJAWS) [ " Negative bars "
   IB_$SYNCEJAWS = 2;
   IF(W(NP) > 0.0) [
+    DIST = (ZMAX_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)+$BDY_TOL)/W(NP);
+    IF(DIST < 0)[DIST = 0.0;]
+    IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
     IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*ISCM_$SYNCEJAWS;
     IF(ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[IRNEW_$SYNCEJAWS =1;]
 
-    $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
-    $SYNCEJAWS_FIND_TZMAX(ISCM_$SYNCEJAWS);
+    $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
 
-    IF(TZMAX_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
-      DIST = TZMAX_$SYNCEJAWS;
-      " Edge case checks copied from SYNCJAWS "
-      IF (DIST < 0) [ DIST = 0.0;]
-      IF(DIST=0. & ISCM_$SYNCEJAWS = ISCM_MAX_$SYNCEJAWS)[DIST=1.E-16;]
-    ]
-    ELSE [
+    IF(TNEG_$SYNCEJAWS < TZMAX_$SYNCEJAWS) [
       DIST = TNEG_$SYNCEJAWS;
+      IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
     ]
+
     IF(DIST <= USTEP) ["particle to be moved to region boundary"
       USTEP = DIST;
       IF (IRNEW_$SYNCEJAWS=1) ["leaving CM through back"
@@ -668,23 +662,21 @@ ELSEIF (IR_$SYNCEJAWS = 3 * ISCM_$SYNCEJAWS) [ " Negative bars "
     ]
   ] " End of W > 0.0 "
   ELSEIF (W(NP) < 0.0) [ " W < 0.0"
-    $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
-    $SYNCEJAWS_FIND_TZMIN(ISCM_$SYNCEJAWS);
-
+    DIST = (ZMIN_$SYNCEJAWS(ISCM_$SYNCEJAWS)-Z(NP)-$BDY_TOL)/W(NP);
+    IF(DIST < 0)[DIST = 0.0;]
     IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
-    IF (TZMIN_$SYNCEJAWS < TNEG_$SYNCEJAWS) [
-      DIST = TZMIN_$SYNCEJAWS;
-      IF (DIST < 0) [ DIST = 0.0;]
-    ]
-    ELSE [
+
+    $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
+
+    IF (TNEG_$SYNCEJAWS < TZMIN_$SYNCEJAWS) [
       DIST = TNEG_$SYNCEJAWS;
     ]
   ]
   ELSE [ " W == 0 "
     DIST=1.0E20;
-    IF(UV_$SYNCEJAWS < 0.0)[
+    IF(UV_$SYNCEJAWS > 0.0)[
       IRNEW_$SYNCEJAWS = IRSTART_$SYNCEJAWS + 3*(ISCM_$SYNCEJAWS-1);
-      $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS);
+      $SYNCEJAWS_FIND_TNEG(ISCM_$SYNCEJAWS, IB_$SYNCEJAWS);
       DIST = TNEG_$SYNCEJAWS;
     ]
   ]
@@ -1227,12 +1219,14 @@ ELSE [
 "
 IF(MODE_$SYNCEJAWS=0)[
 DO I = 1, ISCM_MAX_$SYNCEJAWS[
-   ROUNDMIN_$SYNCEJAWS(I) = SQRT(RAD_$SYNCEJAWS(I) * RAD_$SYNCEJAWS(I) -
-                                 (ZMIN_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I))
-                                 * (ZMIN_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I)));
-   ROUNDMIN_$SYNCEJAWS(I) = SQRT(RAD_$SYNCEJAWS(I) * RAD_$SYNCEJAWS(I) -
-                                 (ZMAX_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I))
-                                 * (ZMAX_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I)));
+   ROUNDMIN_$SYNCEJAWS(I) = RAD_$SYNCEJAWS(I) -
+                              SQRT(RAD_$SYNCEJAWS(I) * RAD_$SYNCEJAWS(I) -
+                              (ZMIN_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I))
+                              * (ZMIN_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I)));
+   ROUNDMAX_$SYNCEJAWS(I) = RAD_$SYNCEJAWS(I) -
+                              SQRT(RAD_$SYNCEJAWS(I) * RAD_$SYNCEJAWS(I) -
+                              (ZMAX_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I))
+                              * (ZMAX_$SYNCEJAWS(I) - ZRAD_$SYNCEJAWS(I)));
 ]
 
 BDYTOL = $BDY_TOL;
@@ -1529,8 +1523,8 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
 
   RPERP_$SYNCEJAWS = SQRT((Z(NP) - ZRAD_$SYNCEJAWS(ISCM_$SYNCEJAWS))
                       * (Z(NP) - ZRAD_$SYNCEJAWS(ISCM_$SYNCEJAWS))
-                     + (XY_$SYNCEJAWS - XP_$SYNCEJAWS(ISCM_$SYNCEJAWS))
-                      * (XY_$SYNCEJAWS - XP_$SYNCEJAWS(ISCM_$SYNCEJAWS)));
+                     + (XY_$SYNCEJAWS - XPT_$SYNCEJAWS(ISCM_$SYNCEJAWS,2))
+                      * (XY_$SYNCEJAWS - XPT_$SYNCEJAWS(ISCM_$SYNCEJAWS,2)));
 
   IF (XY_$SYNCEJAWS > XP_$SYNCEJAWS(ISCM_$SYNCEJAWS)) [
     DIST = RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RPERP_$SYNCEJAWS;
@@ -1546,8 +1540,8 @@ IF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS-1) [ "particle in positive bars"
 ELSEIF(IR_$SYNCEJAWS = 3*ISCM_$SYNCEJAWS) [ "particle in negative bars"
   RPERP_$SYNCEJAWS = SQRT((Z(NP) - ZRAD_$SYNCEJAWS(ISCM_$SYNCEJAWS))
                       * (Z(NP) - ZRAD_$SYNCEJAWS(ISCM_$SYNCEJAWS))
-                     + (XY_$SYNCEJAWS - XN_$SYNCEJAWS(ISCM_$SYNCEJAWS))
-                      * (XY_$SYNCEJAWS - XN_$SYNCEJAWS(ISCM_$SYNCEJAWS)));
+                     + (XY_$SYNCEJAWS - XNT_$SYNCEJAWS(ISCM_$SYNCEJAWS,2))
+                      * (XY_$SYNCEJAWS - XNT_$SYNCEJAWS(ISCM_$SYNCEJAWS,2)));
 
   IF (XY_$SYNCEJAWS < XN_$SYNCEJAWS(ISCM_$SYNCEJAWS)) [
     DIST = RAD_$SYNCEJAWS(ISCM_$SYNCEJAWS) + RPERP_$SYNCEJAWS;
