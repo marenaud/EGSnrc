@@ -2,7 +2,7 @@
 "#############################################################################"
 "                                                                             "
 "  EGSnrc BEAMnrc component module macros: synchronized dynamic jaws          "
-"  Copyright (C) 2015 National Research Council Canada                        "
+"  Copyright (C) 2018 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
 "                                                                             "
@@ -21,11 +21,9 @@
 "                                                                             "
 "#############################################################################"
 "                                                                             "
-"  Authors:         Tony Popescu, 2010                                        "
-"                   Julio Lobo, 2010                                          "
+"  Authors:         Marc-Andre Renaud, 2018                                   "
 "                                                                             "
-"  Contributors:    Frederic Tessier                                          "
-"                   Blake Walters                                             "
+"  Based on SYNCJAWS by Tony Popescu and Julio Lobo                           "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -100,11 +98,11 @@ REPLACE {;COMIN/CM_$SYNCEJAWS/;} WITH {
       XY_$SYNCEJAWS,UV_$SYNCEJAWS,
       IRSTART_$SYNCEJAWS,  IREND_$SYNCEJAWS,  N_$SYNCEJAWS,
       IR_$SYNCEJAWS,IXY_CHOICE_$SYNCEJAWS,ISCM_$SYNCEJAWS,
-      TITLE_$SYNCEJAWS,TZMIN_$SYNCEJAWS,TZMAX_$SYNCEJAWS,
+      TITLE_$SYNCEJAWS,
       TPOS_$SYNCEJAWS,TNEG_$SYNCEJAWS;
    $REAL
       ZBACK_$SYNCEJAWS, ZFRONT_$SYNCEJAWS,
-      XY_$SYNCEJAWS,UV_$SYNCEJAWS,TZMIN_$SYNCEJAWS,TZMAX_$SYNCEJAWS,
+      XY_$SYNCEJAWS,UV_$SYNCEJAWS,
       TPOS_$SYNCEJAWS,TNEG_$SYNCEJAWS,TTEMP_$SYNCEJAWS,TTEMP2_$SYNCEJAWS;
    INTEGER
       IRSTART_$SYNCEJAWS,IREND_$SYNCEJAWS,
@@ -146,13 +144,14 @@ REPLACE {;COMIN/CM_$SYNCEJAWS/;} WITH {
 REPLACE {;COMIN/USER-$SYNCEJAWS/;} WITH {;
 
 COMMON/USER$SYNCEJAWS/ZMIN_$SYNCEJAWS,ZMAX_$SYNCEJAWS,ZRAD_$SYNCEJAWS,
-       XP_$SYNCEJAWS,XN_$SYNCEJAWS,RAD_$SYNCEJAWS,
+       XP_$SYNCEJAWS,XN_$SYNCEJAWS,RAD_$SYNCEJAWS,ZRRAD_$SYNCEJAWS,
        XPT_$SYNCEJAWS,XNT_$SYNCEJAWS,
        ROUNDMIN_$SYNCEJAWS,ROUNDMAX_$SYNCEJAWS,
        DZMIN_$SYNCEJAWS,DZMAX_$SYNCEJAWS,
        DXP_$SYNCEJAWS,DXN_$SYNCEJAWS,
        RNDM1_$SYNCEJAWS,INDEX_$SYNCEJAWS,INDEX1_$SYNCEJAWS,
        INDEX2_$SYNCEJAWS,ISCM_MAX_$SYNCEJAWS,MODE_$SYNCEJAWS,
+       DRMAX_$SYNCEJAWS,DRMIN_$SYNCEJAWS,
        NFIELDS_$SYNCEJAWS,I_$SYNCEJAWS,J_$SYNCEJAWS,ICM_$SYNCEJAWS;
 $REAL ZMIN_$SYNCEJAWS($MAX_N_$SYNCEJAWS),ZMAX_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
       XP_$SYNCEJAWS($MAX_N_$SYNCEJAWS),XN_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
@@ -162,7 +161,8 @@ $REAL ZMIN_$SYNCEJAWS($MAX_N_$SYNCEJAWS),ZMAX_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
       DZMIN_$SYNCEJAWS($MAXFS_$SYNCEJAWS),DZMAX_$SYNCEJAWS($MAXFS_$SYNCEJAWS),
       DXP_$SYNCEJAWS($MAXFS_$SYNCEJAWS),DXN_$SYNCEJAWS($MAXFS_$SYNCEJAWS),
       RNDM1_$SYNCEJAWS,INDEX_$SYNCEJAWS($MAXFIELD_$SYNCEJAWS),INDEX1_$SYNCEJAWS,
-      INDEX2_$SYNCEJAWS;
+      INDEX2_$SYNCEJAWS,ZRRAD_$SYNCEJAWS($MAX_N_$SYNCEJAWS),
+      DRMAX_$SYNCEJAWS($MAXFS_$SYNCEJAWS),DRMIN_$SYNCEJAWS($MAXFS_$SYNCEJAWS);
 $INTEGER ISCM_MAX_$SYNCEJAWS,MODE_$SYNCEJAWS,NFIELDS_$SYNCEJAWS,
         I_$SYNCEJAWS,J_$SYNCEJAWS,ICM_$SYNCEJAWS;
 $INTEGER BIMIN_$SYNCEJAWS, BIMAX_$SYNCEJAWS_$SYNCEJAWS, BIMID_$SYNCEJAWS;
@@ -204,6 +204,7 @@ IF(MODE_$SYNCEJAWS=1 | MODE_$SYNCEJAWS=2)[
         INDEX2_$SYNCEJAWS = INDEX_$SYNCEJAWS(I_$SYNCEJAWS);
         IF(MODE_$SYNCEJAWS=1 & I_$SYNCEJAWS>1)
                  INDEX1_$SYNCEJAWS = INDEX_$SYNCEJAWS(I_$SYNCEJAWS-1);
+
         DO J_$SYNCEJAWS=1,ISCM_MAX_$SYNCEJAWS[
            IF(MODE_$SYNCEJAWS=1 & I_$SYNCEJAWS>1)[
              "calculate settings between fields I_$SYNCEJAWS and I_$SYNCEJAWS-1"
@@ -246,6 +247,12 @@ IF(MODE_$SYNCEJAWS=1 | MODE_$SYNCEJAWS=2)[
            XPT_$SYNCEJAWS(J_$SYNCEJAWS,2)= XP_$SYNCEJAWS(J_$SYNCEJAWS) - $BDY_TOL;
            XNT_$SYNCEJAWS(J_$SYNCEJAWS,1)= XN_$SYNCEJAWS(J_$SYNCEJAWS) - $BDY_TOL;
            XNT_$SYNCEJAWS(J_$SYNCEJAWS,2)= XN_$SYNCEJAWS(J_$SYNCEJAWS) + $BDY_TOL;
+           ZRAD_$SYNCEJAWS(J_$SYNCEJAWS) = ZRRAD_$SYNCEJAWS(J_$SYNCEJAWS) +
+                                           ZMIN_$SYNCEJAWS(J_$SYNCEJAWS);
+           ROUNDMIN_$SYNCEJAWS(J_$SYNCEJAWS) =
+             DRMIN_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS);
+           ROUNDMAX_$SYNCEJAWS(J_$SYNCEJAWS) =
+             DRMAX_$SYNCEJAWS(J_$SYNCEJAWS+(I_$SYNCEJAWS-1)*ISCM_MAX_$SYNCEJAWS);
         ]
         Z_min_CM(ICM_$SYNCEJAWS+1)=ZMAX_$SYNCEJAWS(ISCM_MAX_$SYNCEJAWS);
     ]
@@ -270,32 +277,6 @@ IF(IXY_CHOICE_$SYNCEJAWS({P1}) = 1)[
   XY_$SYNCEJAWS = Y(NP);
   UV_$SYNCEJAWS = V(NP);
 ]
-}
-
-REPLACE {$SYNCEJAWS_FIND_TZMIN(#)} WITH {;
-    IF(W(NP) ~= 0) [
-        TZMIN_$SYNCEJAWS = (ZMIN_$SYNCEJAWS({P1}) - Z(NP) + $BDY_TOL) / W(NP);
-    ]
-    ELSE [
-        TZMIN_$SYNCEJAWS = 1.0E10;
-    ]
-
-    IF (TZMIN_$SYNCEJAWS < 0.0) [
-      TZMIN_$SYNCEJAWS = 1E10;
-    ]
-}
-
-REPLACE {$SYNCEJAWS_FIND_TZMAX(#)} WITH {;
-    IF(W(NP) ~= 0) [
-        TZMAX_$SYNCEJAWS = (ZMAX_$SYNCEJAWS({P1}) - Z(NP) + $BDY_TOL) / W(NP);
-    ]
-    ELSE [
-        TZMAX_$SYNCEJAWS = 1.0E10;
-    ]
-
-    IF (TZMAX_$SYNCEJAWS < 0.0) [
-      TZMAX_$SYNCEJAWS = 1E10;
-    ]
 }
 
 REPLACE {$SYNCEJAWS_FIND_TPOS(#,#)} WITH {;
@@ -374,31 +355,33 @@ REPLACE {$SYNCEJAWS_FIND_TNEG(#,#)} WITH {;
 }
 
 REPLACE {$SYNCEJAWS_IN_NEG(#,#)} WITH {;
-    INBAR_$SYNCEJAWS = 0;
-    DELTA_$SYNCEJAWS = SQRT(
-        RAD_$SYNCEJAWS({P1}) * RAD_$SYNCEJAWS({P1})
-        - (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
-          * (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
-    );
-    IF (XY_$SYNCEJAWS < XNT_$SYNCEJAWS({P1},{P2}) + DELTA_$SYNCEJAWS
-        & Z(NP) > ZMIN_$SYNCEJAWS({P1}) - $BDY_TOL
-        & Z(NP) < ZMAX_$SYNCEJAWS({P1}) + $BDY_TOL) [
-            INBAR_$SYNCEJAWS = 1;
-        ]
+  INBAR_$SYNCEJAWS = 0;
+  DELTA_$SYNCEJAWS = SQRT(
+    RAD_$SYNCEJAWS({P1}) * RAD_$SYNCEJAWS({P1})
+    - (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
+      * (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
+  );
+  IF (XY_$SYNCEJAWS < XNT_$SYNCEJAWS({P1},{P2}) + DELTA_$SYNCEJAWS
+    & Z(NP) > ZMIN_$SYNCEJAWS({P1}) - $BDY_TOL
+    & Z(NP) < ZMAX_$SYNCEJAWS({P1}) + $BDY_TOL) [
+
+    INBAR_$SYNCEJAWS = 1;
+  ]
 }
 
 REPLACE {$SYNCEJAWS_IN_POS(#,#)} WITH {;
-    INBAR_$SYNCEJAWS = 0;
-    DELTA_$SYNCEJAWS = SQRT(
-        RAD_$SYNCEJAWS({P1}) * RAD_$SYNCEJAWS({P1})
-        - (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
-          * (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
-    );
-    IF (XY_$SYNCEJAWS > XPT_$SYNCEJAWS({P1},{P2}) - DELTA_$SYNCEJAWS
-        & Z(NP) > ZMIN_$SYNCEJAWS({P1}) - $BDY_TOL
-        & Z(NP) < ZMAX_$SYNCEJAWS({P1}) + $BDY_TOL) [
-            INBAR_$SYNCEJAWS = 1;
-        ]
+  INBAR_$SYNCEJAWS = 0;
+  DELTA_$SYNCEJAWS = SQRT(
+    RAD_$SYNCEJAWS({P1}) * RAD_$SYNCEJAWS({P1})
+    - (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
+      * (Z(NP) - ZRAD_$SYNCEJAWS({P1}))
+  );
+  IF (XY_$SYNCEJAWS > XPT_$SYNCEJAWS({P1},{P2}) - DELTA_$SYNCEJAWS
+    & Z(NP) > ZMIN_$SYNCEJAWS({P1}) - $BDY_TOL
+    & Z(NP) < ZMAX_$SYNCEJAWS({P1}) + $BDY_TOL) [
+
+    INBAR_$SYNCEJAWS = 1;
+  ]
 }
 
 " Used for validation "

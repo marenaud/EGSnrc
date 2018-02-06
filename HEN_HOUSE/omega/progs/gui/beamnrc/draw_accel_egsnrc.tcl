@@ -688,8 +688,8 @@ proc get_zmax { id } {
                   }
                }
             }
-        } elseif {$pindex==21 || $pindex == 22}  {
-            # dynjaws or syncjaws
+        } elseif {$pindex==21 || $pindex == 22 || $pindex == 26}  {
+            # dynjaws or syncjaws or syncejaws
             set zmax $cmval($id,4,1,$cmval($id,2,0))
         }
     }

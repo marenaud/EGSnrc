@@ -568,6 +568,7 @@ source $GUI_DIR/mlce.tcl
 source $GUI_DIR/dynvmlc.tcl
 source $GUI_DIR/dynjaws.tcl
 source $GUI_DIR/syncjaws.tcl
+source $GUI_DIR/syncejaws.tcl
 source $GUI_DIR/syncmlce.tcl
 source $GUI_DIR/syncvmlc.tcl
 source $GUI_DIR/synchdmlc.tcl
