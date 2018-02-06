@@ -412,37 +412,36 @@ proc show_SYNCEJAWS { id } {
     set cm_ticks($id,z) 10
 
     if {"$cmval($id,2,1)"=="1" || "$cmval($id,2,1)"=="2"} {
-       #open up jaws_file and read coordinates for first field
-     if { [file readable $sync_file($id)] } {
-       set fileid [open $sync_file($id) "r"]
-       #first three lines are title, no. of fields and index of first field
-       gets $fileid data
-       gets $fileid data
-       gets $fileid data
-       for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
-           gets $fileid data
-           for {set j 0} {$j<6} {incr j} {
-              set data [get_val $data cmval $id,4,$j,$i]
-           }
-       }
-     } else {
-       tk_dialog tk_dialog .syncejaws$id.nojawfile1 "No jaw opening file" "No\
-    jaw opening file has been specified or the specified file does not exist\
-    or is not readable.  This is required for showing jaw openings in the\
-    preview if dynamic or step-and-shoot fields are specified." error 0 OK
-       return
-     }
+        #open up jaws_file and read coordinates for first field
+        if { [file readable $sync_file($id)] } {
+            set fileid [open $sync_file($id) "r"]
+            #first three lines are title, no. of fields and index of first field
+            gets $fileid data
+            gets $fileid data
+            gets $fileid data
+            for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
+                gets $fileid data
+                for {set j 2} {$j<6} {incr j} {
+                    set data [get_val $data cmval $id,4,$j,$i]
+                }
+            }
+        } else {
+            tk_dialog tk_dialog .syncejaws$id.nojawfile1 "No jaw opening file" "No\
+            jaw opening file has been specified or the specified file does not exist\
+            or is not readable.  This is required for showing jaw openings in the\
+            preview if dynamic or step-and-shoot fields are specified." error 0 OK
+            return
+        }
     }
-
 
     # have to make an initial xrange,zrange:
     catch {
-	set xrange(0) -$cmval($id,0)
-	set xrange(1) $cmval($id,0)
-	set yrange(0) -$cmval($id,0)
-	set yrange(1) $cmval($id,0)
-	set zrange(0) [get_zmax [expr $id-1]]
-	set zrange(1) [get_zmax $id]
+        set xrange(0) -$cmval($id,0)
+        set xrange(1) $cmval($id,0)
+        set yrange(0) -$cmval($id,0)
+        set yrange(1) $cmval($id,0)
+        set zrange(0) [get_zmax [expr $id-1]]
+        set zrange(1) [get_zmax $id]
     }
 
     if [catch { draw_SYNCEJAWS $id }]==1 {
@@ -610,7 +609,7 @@ proc add_SYNCEJAWS {id xscale zscale xmin zmin l m parent_w} {
        gets $fileid data
        for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
            gets $fileid data
-           for {set j 0} {$j<6} {incr j} {
+           for {set j 2} {$j<6} {incr j} {
               set data [get_val $data cmval $id,4,$j,$i]
            }
        }
@@ -632,21 +631,19 @@ proc add_SYNCEJAWS {id xscale zscale xmin zmin l m parent_w} {
     $parent_w create rectangle $x(1) $z(1) $x(2) $z(2) -fill $color -outline {}
 
     for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
-	if [string compare $cmval($id,3,$i) "X"]==0 {
-	    set y1 [expr ($cmval($id,4,0,$i)-$zmin)*$zscale+$m]
-	    set y2 [expr ($cmval($id,4,1,$i)-$zmin)*$zscale+$m]
-	    set x(xmn) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
-	    set x(xmp) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
-	    set x(xfp) [expr ($cmval($id,4,2,$i)-$xmin)*$xscale+$l]
-	    set x(xbp) [expr ($cmval($id,4,3,$i)-$xmin)*$xscale+$l]
-	    set x(xfn) [expr ($cmval($id,4,4,$i)-$xmin)*$xscale+$l]
-	    set x(xbn) [expr ($cmval($id,4,5,$i)-$xmin)*$xscale+$l]
-	    set color [lindex $colorlist $med($i)]
-	    $parent_w create polygon $x(xfp) $y1 $x(xmp) $y1 $x(xmp) $y2\
-		    $x(xbp) $y2 -fill $color -outline $color
-	    $parent_w create polygon $x(xfn) $y1 $x(xbn) $y2 $x(xmn) $y2\
-		    $x(xmn) $y1 -fill $color -outline $color
-	}
+        if [string compare $cmval($id,3,$i) "X"]==0 {
+            set y1 [expr ($cmval($id,4,0,$i)-$zmin)*$zscale+$m]
+            set y2 [expr ($cmval($id,4,1,$i)-$zmin)*$zscale+$m]
+            set x(xmn) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
+            set x(xmp) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
+            set x(xfn) [expr ($cmval($id,4,4,$i)-$xmin + $cmval($id,4,1,$i))*$xscale+$l]
+            set x(xfp) [expr ($cmval($id,4,5,$i)-$xmin - $cmval($id,4,1,$i))*$xscale+$l]
+            set color [lindex $colorlist $med($i)]
+            $parent_w create polygon $x(xfp) $y1 $x(xmp) $y1 $x(xmp) $y2\
+                $x(xfp) $y2 -fill $color -outline $color
+            $parent_w create polygon $x(xfn) $y1 $x(xfn) $y2 $x(xmn) $y2\
+                $x(xmn) $y1 -fill $color -outline $color
+        }
     }
 }
 
@@ -681,7 +678,7 @@ proc add_SYNCEJAWS_yz {id xscale zscale xmin zmin l m parent_w} {
        gets $fileid data
        for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
            gets $fileid data
-           for {set j 0} {$j<6} {incr j} {
+           for {set j 2} {$j<6} {incr j} {
               set data [get_val $data cmval $id,4,$j,$i]
            }
        }
@@ -704,168 +701,20 @@ proc add_SYNCEJAWS_yz {id xscale zscale xmin zmin l m parent_w} {
     $parent_w create rectangle $x(1) $z(1) $x(2) $z(2) -fill $color -outline {}
 
     for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
-	if [string compare $cmval($id,3,$i) "Y"]==0 {
-	    set y1 [expr ($cmval($id,4,0,$i)-$zmin)*$zscale+$m]
-	    set y2 [expr ($cmval($id,4,1,$i)-$zmin)*$zscale+$m]
-	    set x(xmn) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
-	    set x(xmp) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
-	    set x(xfp) [expr ($cmval($id,4,2,$i)-$xmin)*$xscale+$l]
-	    set x(xbp) [expr ($cmval($id,4,3,$i)-$xmin)*$xscale+$l]
-	    set x(xfn) [expr ($cmval($id,4,4,$i)-$xmin)*$xscale+$l]
-	    set x(xbn) [expr ($cmval($id,4,5,$i)-$xmin)*$xscale+$l]
-	    set color [lindex $colorlist $med($i)]
-	    $parent_w create polygon $x(xfp) $y1 $x(xmp) $y1 $x(xmp) $y2\
-		    $x(xbp) $y2 -fill $color -outline $color
-	    $parent_w create polygon $x(xfn) $y1 $x(xbn) $y2 $x(xmn) $y2\
-		    $x(xmn) $y1 -fill $color -outline $color
-	}
-    }
-}
-
-proc quikdyndef { id } {
-
-    global cmval ssd fmin fmax fieldfocus
-
-# procedure which allows the user to define the x/y coordinates of the
-# jaws using field dimensions, SSD and Z from which SSD is measured
-
-    catch { destroy .syncejaws$id.child.qkdef }
-    toplevel .syncejaws$id.child.qkdef
-    set top .syncejaws$id.child.qkdef
-    wm title $top "Define openings using field limits & SSD"
-
-    #upper part of window
-    frame $top.u
-
-    #some text explaining what's going on
-    message $top.u.lab -text "Specify the field limits, SSD and\
-    Z focus (from which SSD is measured) of the field and select the paired\
-    jaws to apply this field to.  Click Update x/y coords. to calculate the\
-     opening coordinates.  Note: only valid for photon beams." -width 10c
-    pack $top.u.lab -pady 5
-
-
-    #left side of the window
-    frame $top.u.l -bd 5
-
-    frame $top.u.l.fmin
-    label $top.u.l.fmin.lab -text "lower edge of field (cm)"
-    entry $top.u.l.fmin.inp -textvariable fmin($id)
-    pack $top.u.l.fmin.inp $top.u.l.fmin.lab -side right -fill x
-
-    frame $top.u.l.fmax
-    label $top.u.l.fmax.lab -text "upper edge of field (cm)"
-    entry $top.u.l.fmax.inp -textvariable fmax($id)
-    pack $top.u.l.fmax.inp $top.u.l.fmax.lab -side right -fill x
-
-    frame $top.u.l.ssd
-    label $top.u.l.ssd.lab -text "SSD (cm)"
-    entry $top.u.l.ssd.inp -textvariable ssd($id)
-    pack $top.u.l.ssd.inp $top.u.l.ssd.lab -side right -fill x
-
-    frame $top.u.l.ff
-    label $top.u.l.ff.lab -text "Z focus of field (cm)"
-    entry $top.u.l.ff.inp -textvariable fieldfocus($id)
-    pack $top.u.l.ff.inp $top.u.l.ff.lab -side right -fill x
-
-    pack $top.u.l.fmin $top.u.l.fmax $top.u.l.ssd $top.u.l.ff -side top -fill x
-
-    pack $top.u.l -side left
-
-    #right side of the window
-    frame $top.u.r
-
-    label $top.u.r.lab -text "apply to jaw #:"
-
-    pack $top.u.r.lab -side top -anchor w
-
-    frame $top.u.r.list
-    listbox $top.u.r.list.num -height 5 -selectmode multiple \
-            -yscrollcommand "$top.u.r.list.scrl set"
-    for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
-      $top.u.r.list.num insert end "$i"
-    }
-    scrollbar $top.u.r.list.scrl -command "$top.u.r.list.num yview"
-
-    pack $top.u.r.list.scrl -side right -fill y
-    pack $top.u.r.list.num -side left
-    pack $top.u.r.list -side left
-
-    pack $top.u.r -side left
-
-    frame $top.but -bd 4
-    button $top.but.update -text "Update x/y coords." -command "quikdyncalc $id"\
-            -relief groove -bd 8
-    button $top.but.quit -text "Quit" -command "destroy .syncejaws$id.child.qkdef"\
-            -relief groove -bd 8
-    pack $top.but.update $top.but.quit -side left
-    pack $top.u $top.but -side top
-
-}
-
-proc quikdyncalc { id } {
-    global cmval ssd halfwidth fieldfocus fmin fmax
-
-#   procedure to calculate X/Y coordinates based on field dimensions, ssd
-#   and Z from which SSD is measured
-#   and updates the coordinates as displayed in the jaws definition window
-
-    set ierror 0
-
-    set dynjawlist [.syncejaws$id.child.qkdef.u.r.list.num curselection]
-
-    if { $dynjawlist=="" } {
-       tk_dialog .syncejaws$id.warning1 "No jaws selected" "You must select at\
-       least 1 set of jaws to apply this field size & SSD to." warning 0 OK
-       return
-    }
-
-    if { $ssd($id)=="" || $fmin($id)=="" || $fmin($id)=="" || $fieldfocus($id)==""} {
-       tk_dialog .syncejaws$id.warning2 \
-       "No field dimensions or SSD or field focus specified" "You must\
-    specify field dimensions, an SSD and a Z value from which SSD is measured\
-       in order to calculate the x/y coordinates of the openings." warning 0 OK
-       return
-    } elseif { $fmin($id) > $fmax($id) } {
-       tk_dialog .syncejaws$id.warning3 \
-       "Field dimension problem" "The lower edge of the field must be <=\
-    the upper edge of the field in order for jaw settings to be calculated\
-    properly." warning 0 OK
-       return
-    }
-
-    foreach i $dynjawlist {
-       set j [expr $i+1]
-       if { $cmval($id,4,0,$j)!="" && $cmval($id,4,1,$j)!="" &&\
-             $cmval($id,4,1,$j)>$cmval($id,4,0,$j) } {
-           # grid automatically updates once the values are recalculated
-           set cmval($id,4,2,$j) \
-[expr ($cmval($id,4,0,$j)-$fieldfocus($id))*double($fmax($id))/double($ssd($id))]
-           set cmval($id,4,2,$j) [format "%3.5f" $cmval($id,4,2,$j)]
-           set cmval($id,4,3,$j) \
-[expr ($cmval($id,4,1,$j)-$fieldfocus($id))*double($fmax($id))/double($ssd($id))]
-           set cmval($id,4,3,$j) [format "%3.5f" $cmval($id,4,3,$j)]
-           set cmval($id,4,4,$j) \
-[expr ($cmval($id,4,0,$j)-$fieldfocus($id))*double($fmin($id))/double($ssd($id))
-]
-           set cmval($id,4,4,$j) [format "%3.5f" $cmval($id,4,4,$j)]
-           set cmval($id,4,5,$j) \
-[expr ($cmval($id,4,1,$j)-$fieldfocus($id))*double($fmin($id))/double($ssd($id))
-]
-           set cmval($id,4,5,$j) [format "%3.5f" $cmval($id,4,5,$j)]
-        } else {
-           incr ierror
+        if [string compare $cmval($id,3,$i) "Y"]==0 {
+            set y1 [expr ($cmval($id,4,0,$i)-$zmin)*$zscale+$m]
+            set y2 [expr ($cmval($id,4,1,$i)-$zmin)*$zscale+$m]
+            set x(xmn) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
+            set x(xmp) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
+            set x(xfn) [expr ($cmval($id,4,4,$i)-$xmin + $cmval($id,4,1,$i))*$xscale+$l]
+            set x(xfp) [expr ($cmval($id,4,5,$i)-$xmin - $cmval($id,4,1,$i))*$xscale+$l]
+            set color [lindex $colorlist $med($i)]
+            $parent_w create polygon $x(xfp) $y1 $x(xmp) $y1 $x(xmp) $y2\
+                $x(xfp) $y2 -fill $color -outline $color
+            $parent_w create polygon $x(xfn) $y1 $x(xfn) $y2 $x(xmn) $y2\
+                $x(xmn) $y1 -fill $color -outline $color
         }
     }
-
-    if { $ierror > 0 } {
-       tk_dialog .syncejaws$id.warning4 "Front and back of jaws not defined"\
-       "$ierror of the selected jaws did not\
-       have front and back Z positions defined or had front Z position >\
-       back Z position.  The x/y coordinates of the opening(s) for this/these\
-       jaw(s) was not updated." warning 0 OK
-    }
-
 }
 
 proc set_jawsfile { } {
