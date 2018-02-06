@@ -1020,7 +1020,7 @@ DO I = 1,ISCM_MAX_$SYNCEJAWS ["loop to get each bar location"
            'XP(',I4,') beyond RMAX_CM'//);
       IERR_GEOM(ICM_$SYNCEJAWS)=IERR_GEOM(ICM_$SYNCEJAWS)+1;
    ]
-   IF(ABS(XN_$SYNCEJAWS(I) - RAD_$SYNCEJAWS(I))>RMAX_CM(ICM_$SYNCEJAWS))[
+   IF(ABS(XN_$SYNCEJAWS(I) + RAD_$SYNCEJAWS(I))>RMAX_CM(ICM_$SYNCEJAWS))[
       OUTPUT ICM_$SYNCEJAWS, I;
         (//'***ERROR IN CM ',I4,' (SYNCEJAWS):'/
            'XN(',I4,') beyond RMAX_CM'//);
