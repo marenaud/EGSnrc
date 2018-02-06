@@ -623,8 +623,8 @@ proc add_SYNCEJAWS {id xscale zscale xmin zmin l m parent_w} {
     }
 
     # air in background
-    set z(1) [expr ($cmval($id,4,0,1)-$zmin)*$zscale+$m]
-    set z(2) [expr ($cmval($id,4,1,$cmval($id,2,0))-$zmin)*$zscale+$m]
+    set z(1) [expr ($cmval($id,4,2,1)-$zmin)*$zscale+$m]
+    set z(2) [expr ($cmval($id,4,3,$cmval($id,2,0))-$zmin)*$zscale+$m]
     set x(1) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
     set x(2) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
     set color [lindex $colorlist $med(air)]
@@ -632,8 +632,8 @@ proc add_SYNCEJAWS {id xscale zscale xmin zmin l m parent_w} {
 
     for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
         if [string compare $cmval($id,3,$i) "X"]==0 {
-            set y1 [expr ($cmval($id,4,0,$i)-$zmin)*$zscale+$m]
-            set y2 [expr ($cmval($id,4,1,$i)-$zmin)*$zscale+$m]
+            set y1 [expr ($cmval($id,4,2,$i)-$zmin)*$zscale+$m]
+            set y2 [expr ($cmval($id,4,3,$i)-$zmin)*$zscale+$m]
             set x(xmn) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
             set x(xmp) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
             set x(xfn) [expr ($cmval($id,4,4,$i)-$xmin + $cmval($id,4,1,$i))*$xscale+$l]
@@ -694,7 +694,7 @@ proc add_SYNCEJAWS_yz {id xscale zscale xmin zmin l m parent_w} {
     # The x's here are really y's...
     # air in background, 2 rectangles
     set z(1) [expr $zmin*$zscale+$m]
-    set z(2) [expr (-$cmval($id,4,1,$cmval($id,2,0)))*$zscale+$m]
+    set z(2) [expr (-$cmval($id,4,3,$cmval($id,2,0)))*$zscale+$m]
     set x(1) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
     set x(2) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
     set color [lindex $colorlist $med(air)]
@@ -702,8 +702,8 @@ proc add_SYNCEJAWS_yz {id xscale zscale xmin zmin l m parent_w} {
 
     for {set i 1} {$i<=$cmval($id,2,0)} {incr i} {
         if [string compare $cmval($id,3,$i) "Y"]==0 {
-            set y1 [expr ($cmval($id,4,0,$i)-$zmin)*$zscale+$m]
-            set y2 [expr ($cmval($id,4,1,$i)-$zmin)*$zscale+$m]
+            set y1 [expr ($cmval($id,4,2,$i)-$zmin)*$zscale+$m]
+            set y2 [expr ($cmval($id,4,3,$i)-$zmin)*$zscale+$m]
             set x(xmn) [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
             set x(xmp) [expr ($cmval($id,0)-$xmin)*$xscale+$l]
             set x(xfn) [expr ($cmval($id,4,4,$i)-$xmin + $cmval($id,4,1,$i))*$xscale+$l]
