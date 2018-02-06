@@ -166,7 +166,7 @@ proc load_module {} {
 	incr indx
 	set data1 [string range $data1 $indx [string length $data1]]
 	set found 0
-	for {set j 1} {$j <= 25} {incr j} {
+	for {set j 1} {$j <= $maxvals(MAX_CMs)} {incr j} {
 	    # look for a match in cm_names to get cm_type
 	    if [string compare $cm_names($j) $str]==0 {
 		set found 1

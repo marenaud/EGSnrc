@@ -1714,6 +1714,7 @@ set cm_names(22) "SYNCJAWS"
 set cm_names(23) "SYNCMLCE"
 set cm_names(24) "SYNCVMLC"
 set cm_names(25) "SYNCHDMLC"
+set cm_names(26) "SYNCEJAWS"
 
 # HELP TEXT FOR CMs:
 
@@ -2706,6 +2707,10 @@ You must also ensure that:
 ensuring that zg >= Z of bottom of tongue of HALF TARGET leaves
 2. QUARTER ISOCENTER and QUARTER TARGET leaves fit together by ensuring that zg >= Z of bottom of tongue\
 of QUARTER TARGET leaves and zt >= Z of top of groove of QUARTER TARGET leaves.
+}
+
+set help_syncejaws_text {
+	Lorem ipsum.
 }
 
 # HELP TEXT FOR SOURCES:
